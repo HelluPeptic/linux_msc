@@ -23,4 +23,9 @@ for file in "$SCRIPT_DIR"/*; do
   fi
 done
 
-echo "Installation complete! Scripts are now available globally."
+# Remove the repository to save space
+echo "Cleaning up..."
+cd "$SCRIPT_DIR/.." || exit
+rm -rf "$SCRIPT_DIR"
+
+echo "Installation complete! Scripts are now available globally, and the repository has been removed."
