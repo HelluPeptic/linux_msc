@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Function to display the menu
+show_menu() {
+    dialog --clear --title "Minecraft Server Control" --menu "Choose an option:" 15 50 2 \
+        1 "Manage Minecraft Servers" \
+        2 "Create a New Minecraft Server" 2> /tmp/msc_menu_choice
+
+    local choice
+    choice=$(< /tmp/msc_menu_choice)
+    rm -f /tmp/msc_menu_choice
+
+    case "$choice" in
+        1)
+            # Run the msc-servers.sh script
+            bash msc-servers.sh
+            ;;
+        2)
+            # Run the msc-create.sh script
+            bash msc-create.sh
+            ;;
+        *)
+            # If cancelled or closed, do nothing
+            clear
+            echo "Exited menu."
+            ;;
+    esac
+}
+
+# Main execution
+clear
+show_menu
