@@ -1,19 +1,26 @@
 #!/bin/bash
 
-# Define the target directory
-TARGET_DIR="/usr/local/bin"
+# Define the installation directory
+INSTALL_DIR="/usr/local/bin"
 
-# Copy the script to the target directory
-echo "Installing scripts to $TARGET_DIR..."
-
-# Check for permissions
+# Check for root permissions
 if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root or use sudo to install."
+  echo "Error: Please run as root or use sudo."
   exit 1
 fi
 
-# Install the script
-cp msc "$TARGET_DIR/"
-chmod +x "$TARGET_DIR/msc"
+echo "Installing scripts to $INSTALL_DIR..."
 
-echo "Installation complete! You can now use 'msc' from the command line."
+# Get the directory where this script is located
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
+# Copy all files from the repository to the installation directory
+for file in "$SCRIPT_DIR"/*; do
+  if [ -f "$file" ]; then
+    cp "$file" "$INSTALL_DIR/"
+    chmod +x "$INSTALL_DIR/$(basename "$file")"
+    echo "Installed $(basename "$file") to $INSTALL_DIR"
+  fi
+done
+
+echo "Installation complete! Scripts are now available globally."
