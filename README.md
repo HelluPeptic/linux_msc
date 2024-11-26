@@ -1,4 +1,4 @@
-# My Linux Scripts
+# Linux Scripts
 
 This repository contains useful scripts for Linux, including the `msc` program, which provides a convenient menu-driven interface. Follow the steps below to install and use the program.
 
