@@ -33,32 +33,10 @@ EOF
 }
 
 # Function to install Java 21 manually from Adoptium
-install_java21() {
-    echo "Java 21 is not installed. Attempting manual installation from Adoptium."
-
-    JDK_URL="https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.5_11.tar.gz"
-
-    # Download the JDK (manual link)
-    wget "$JDK_URL" -O openjdk-21.tar.gz
-    if [ ! -f openjdk-21.tar.gz ]; then
-        echo "Failed to download Java 21. Exiting."
-        exit 1
-    fi
-
-    # Extract the downloaded archive to /opt/java-21
-    echo "Extracting Java 21..."
-    sudo mkdir -p /opt/java-21
-    if ! sudo tar -xzf openjdk-21.tar.gz -C /opt/java-21 --strip-components=1; then
-        echo "Extraction of Java 21 failed."
-        rm openjdk-21.tar.gz
-        exit 1
-    fi
-
-    # Set up Java 21 as default
-    export PATH=/opt/java-21/bin:$PATH
-    sudo update-alternatives --install /usr/bin/java java /opt/java-21/bin/java 1
-    rm openjdk-21.tar.gz
-    echo "Java 21 installation completed successfully."
+install_java_21() {
+    echo "Installing Java 21..."
+    sudo apt update
+    sudo apt install -y openjdk-21-jdk openjdk-21-jre
 }
 
 # Function to download the Minecraft server .jar file
@@ -74,8 +52,7 @@ download_server() {
     fi
 
     echo "eula=true" > eula.txt
-    echo "#!/bin/bash
-java -Xms1G -Xmx$RAM_ALLOCATION -jar $PAPER_JAR nogui" > start.sh
+    echo "#!/bin/bash java -Xms1G -Xmx$RAM_ALLOCATION -jar $PAPER_JAR nogui" > start.sh
     chmod +x start.sh
     echo "Server setup complete! Navigate to '$SERVER_DIR' and run './start.sh' to start the server."
 }
