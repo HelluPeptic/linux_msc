@@ -9,6 +9,9 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+# Install/Update dialog
+sudo apt install dialog
+
 echo "Installing scripts to $INSTALL_DIR..."
 
 # Get the directory where this script is located
