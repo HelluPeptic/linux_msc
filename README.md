@@ -29,8 +29,8 @@ Once installed, you can run the program using the following command:
 This will open the menu for the program. Enjoy!
 
 <img width="673" alt="Skärmbild 2024-11-28 111058" src="https://github.com/user-attachments/assets/533acc5f-6026-4cce-818a-dab1c59754dd">
-<img width="673" alt="Skärmbild 2024-11-28 111151" src="https://github.com/user-attachments/assets/9dc69ed4-4bc9-4256-bd8a-14bca36e4b68">
 <img width="673" alt="Skärmbild 2024-11-28 111128" src="https://github.com/user-attachments/assets/2bec04d4-b6c6-4735-98b6-dbaaa004fa55">
+<img width="673" alt="Skärmbild 2024-11-28 111151" src="https://github.com/user-attachments/assets/9dc69ed4-4bc9-4256-bd8a-14bca36e4b68">
 
 ----------------------------------------------------------------------
 
