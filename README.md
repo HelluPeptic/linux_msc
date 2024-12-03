@@ -39,5 +39,4 @@ This will open the menu for the program. Enjoy!
 
 - Ensure you have sufficient permissions to install the program (sudo is required).
 
-- If you encounter any issues, feel free to raise an issue on the [GitHub repository](https://github.com/PepticGamer/linux_msc).
-
+- If you encounter any issues, feel free to raise an issue on the [GitHub repository](https://github.com/PepticGamer/linux_msc/issues).
