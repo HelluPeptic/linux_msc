@@ -1,10 +1,17 @@
 #!/bin/bash
 
+server_dir="$1"
 SERVER_DIR="forge_1.21.1"
 MINECRAFT_VERSION="1.21.1"
 FORGE_INSTALLER_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/1.21.1-52.0.28/forge-1.21.1-52.0.28-installer.jar"
 FORGE_INSTALLER_JAR="forge-installer.jar"
 FORGE_UNIVERSAL_JAR="forge-1.21.1-52.0.28-shim.jar "
+
+# Check if the directory name was provided
+if [[ -z "$server_dir" ]]; then
+    echo "Error: No server directory specified. Usage: $0 <server_directory>"
+    exit 1
+fi
 
 # Function to install Java 21 if needed
 install_java_21() {

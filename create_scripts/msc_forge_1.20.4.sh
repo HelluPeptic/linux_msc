@@ -1,10 +1,17 @@
 #!/bin/bash
 
+server_dir="$1"
 SERVER_DIR="forge_1.20.4"
 MINECRAFT_VERSION="1.20.4"
 FORGE_INSTALLER_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.4-49.1.0/forge-1.20.4-49.1.0-installer.jar"
 FORGE_INSTALLER_JAR="forge-installer.jar"
 FORGE_UNIVERSAL_JAR="forge-1.20.4-49.1.0-shim.jar"
+
+# Check if the directory name was provided
+if [[ -z "$server_dir" ]]; then
+    echo "Error: No server directory specified. Usage: $0 <server_directory>"
+    exit 1
+fi
 
 # Function to install Java 17 if needed
 install_java_17() {
