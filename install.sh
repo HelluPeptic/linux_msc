@@ -12,6 +12,7 @@ fi
 echo "Installing scripts and directories to $INSTALL_DIR..."
 
 # Install/Update Dialog
+sudo apt install dialog
 
 # Get the directory where this script is located
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
