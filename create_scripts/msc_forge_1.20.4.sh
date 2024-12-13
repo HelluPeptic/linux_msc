@@ -1,11 +1,12 @@
 #!/bin/bash
 
-server_dir="$1"
-SERVER_DIR="forge_1.20.4"
 MINECRAFT_VERSION="1.20.4"
 FORGE_INSTALLER_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.4-49.1.0/forge-1.20.4-49.1.0-installer.jar"
 FORGE_INSTALLER_JAR="forge-installer.jar"
 FORGE_UNIVERSAL_JAR="forge-1.20.4-49.1.0-shim.jar"
+
+# Accept the custom server directory name as a parameter
+server_dir="$1"
 
 # Check if the directory name was provided
 if [[ -z "$server_dir" ]]; then
@@ -42,8 +43,8 @@ check_java_version() {
 
 # Function to download and set up the Forge server
 download_forge_server() {
-    mkdir -p "$SERVER_DIR"
-    cd "$SERVER_DIR" || exit 1
+    mkdir -p "$server_dir"
+    cd "$server_dir" || exit 1
 
     echo "Downloading Forge installer..."
     curl -o "$FORGE_INSTALLER_JAR" "$FORGE_INSTALLER_URL"
@@ -65,7 +66,7 @@ download_forge_server() {
 java -Xms1G -Xmx2G -jar $FORGE_UNIVERSAL_JAR nogui" > start.sh
 
     chmod +x start.sh
-    echo "Forge server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$SERVER_DIR' and run: 'bash start.sh'."
+    echo "Forge server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$server_dir' and run: 'bash start.sh'."
 }
 
 # Main script flow
