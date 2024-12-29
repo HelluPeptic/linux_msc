@@ -34,10 +34,11 @@ esac
 
 # Prompt for Minecraft version
 versions=(
-    1 "1.21.1"
-    2 "1.20.4"
-    3 "1.20.1"
-    4 "Quit"
+    1 "1.21.4"
+    2 "1.21.1"
+    3 "1.20.4"
+    4 "1.20.1"
+    5 "Quit"
 )
 
 version_choice=$(dialog --clear \
@@ -49,10 +50,11 @@ version_choice=$(dialog --clear \
 clear
 
 case $version_choice in
-    1) server_version="1.21.1" ;;
-    2) server_version="1.20.4" ;;
-    3) server_version="1.20.1" ;;
-    4) echo "Exiting..."; exit 0 ;;
+    1) server_version="1.21.4" ;;
+    2) server_version="1.21.1" ;;
+    3) server_version="1.20.4" ;;
+    4) server_version="1.20.1" ;;
+    5) echo "Exiting..."; exit 0 ;;
 esac
 
 # Prompt for server name
@@ -88,6 +90,7 @@ case $server_type in
         ;;
     "paper")
         case $server_version in
+            "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" ;;
             "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" ;;
             "1.20.4") bash "$create_scripts_dir/msc_paper_1.20.4.sh" "$server_dir" ;;
             "1.20.1") bash "$create_scripts_dir/msc_paper_1.20.1.sh" "$server_dir" ;;
