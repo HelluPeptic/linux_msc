@@ -1,9 +1,9 @@
 #!/bin/bash
 
 MINECRAFT_VERSION="1.21.4"
-FORGE_INSTALLER_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/1.21.4-54.0.17/forge-1.21.4-54.0.17-shim.jar"
+FORGE_INSTALLER_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/1.21.4-54.0.17/forge-1.21.4-54.0.17-installer.jar"
 FORGE_INSTALLER_JAR="forge-installer.jar"
-FORGE_UNIVERSAL_JAR="forge-1.21.4-54.0.17-shim.jar"
+FORGE_UNIVERSAL_JAR="forge-1.21.4-54.0.17-installer.jar"
 
 # Accept the custom server directory name as a parameter
 server_dir="$1"
