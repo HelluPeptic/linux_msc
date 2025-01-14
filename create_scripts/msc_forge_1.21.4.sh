@@ -62,8 +62,13 @@ download_forge_server() {
     echo "eula=true" > eula.txt
 
     # Create a start script
-    echo "#!/bin/bash
-java -Xms1G -Xmx2G -jar $FORGE_UNIVERSAL_JAR nogui" > start.sh
+    echo "#!/usr/bin/env sh
+# Add custom JVM arguments (such as RAM allocation) to the user_jvm_args.txt
+
+java -jar forge-1.21.4-54.0.17-shim.jar --onlyCheckJava || exit 1
+
+# Add custom program arguments (such as nogui) to the next line before the "$@" or pass them to this script directly
+java @user_jvm_args.txt @libraries/net/minecraftforge/forge/1.21.4-54.0.17/unix_args.txt "$@"" > start.sh
 
     chmod +x start.sh
     echo "Forge server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$server_dir' and run: 'bash start.sh'."
