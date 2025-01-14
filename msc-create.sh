@@ -83,6 +83,7 @@ fi
 case $server_type in
     "vanilla")
         case $server_version in
+            "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" ;;
             "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" ;;
             "1.20.4") bash "$create_scripts_dir/msc_vanilla_1.20.4.sh" "$server_dir" ;;
             "1.20.1") bash "$create_scripts_dir/msc_vanilla_1.20.1.sh" "$server_dir" ;;
@@ -98,6 +99,7 @@ case $server_type in
         ;;
     "fabric")
         case $server_version in
+            "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" ;;
             "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" ;;
             "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" ;;
             "1.20.1") bash "$create_scripts_dir/msc_fabric_1.20.1.sh" "$server_dir" ;;
@@ -105,6 +107,7 @@ case $server_type in
         ;;
     "forge")
         case $server_version in
+            "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" ;;
             "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" ;;
             "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" ;;
             "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" ;;
