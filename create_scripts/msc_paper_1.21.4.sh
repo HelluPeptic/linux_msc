@@ -5,7 +5,7 @@ SERVER_DIR="$1"
 PAPER_VERSION="1.21.4"
 PAPER_API_URL="https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION/builds/66/downloads/paper-1.21.4-66.jar"
 PAPER_JAR="paper-$PAPER_VERSION.jar"
-RAM_ALLOCATION="6G"
+RAM_ALLOCATION="$2"
 
 # Ensure a server directory name is provided
 if [ -z "$SERVER_DIR" ]; then
