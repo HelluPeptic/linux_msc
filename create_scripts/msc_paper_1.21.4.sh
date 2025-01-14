@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# Get the server directory name from the first argument
-SERVER_DIR="$1"
 PAPER_VERSION="1.21.4"
 PAPER_API_URL="https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION/builds/66/downloads/paper-1.21.4-66.jar"
 PAPER_JAR="paper-$PAPER_VERSION.jar"
+
+# Accept the custom server directory name and RAM allocation as parameters
+server_dir="$1"
 RAM_ALLOCATION="$2"
 
 # Ensure a server directory name is provided

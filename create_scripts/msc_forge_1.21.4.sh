@@ -5,12 +5,14 @@ FORGE_INSTALLER_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/1
 FORGE_INSTALLER_JAR="forge-1.21.4-54.0.17-installer.jar"
 FORGE_UNIVERSAL_JAR="forge-1.21.4-54.0.17-installer.jar"
 
-# Accept the custom server directory name as a parameter
+# Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
+ram_allocation="$2"
 
 # Check if the directory name was provided
-if [[ -z "$server_dir" ]]; then
-    echo "Error: No server directory specified. Usage: $0 <server_directory>"
+if [[ -z "$server_dir" || -z "$ram_allocation" ]]; then
+    echo "Error: Missing parameters."
+    echo "Usage: $0 <server_directory> <ram_allocation>"
     exit 1
 fi
 
@@ -61,17 +63,17 @@ download_forge_server() {
     # Accept the EULA
     echo "eula=true" > eula.txt
 
-    # Create a start script
+    # Configure JVM arguments with specified RAM allocation
+    echo "-Xms2G" > user_jvm_args.txt
+    echo "-Xmx$ram_allocation" >> user_jvm_args.txt
+
+    # Create the start script
     echo "#!/usr/bin/env sh
-# Add custom JVM arguments (such as RAM allocation) to the user_jvm_args.txt
-
-java -jar forge-1.21.4-54.0.17-shim.jar --onlyCheckJava || exit 1
-
 # Add custom program arguments (such as nogui) to the next line before the "$@" or pass them to this script directly
 java @user_jvm_args.txt @libraries/net/minecraftforge/forge/1.21.4-54.0.17/unix_args.txt "$@"" > start.sh
 
     chmod +x start.sh
-    echo "Forge server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$server_dir' and run: 'bash start.sh'."
+    echo "Forge server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$server_dir' and run: './start.sh'."
 }
 
 # Main script flow

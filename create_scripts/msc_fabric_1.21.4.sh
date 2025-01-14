@@ -1,12 +1,14 @@
 #!/bin/bash
 
-# Accept the custom server directory name as a parameter
 server_dir="$1"
 MINECRAFT_VERSION="1.21.4"
 FABRIC_INSTALLER_URL="https://maven.fabricmc.net/net/fabricmc/fabric-installer/0.11.2/fabric-installer-0.11.2.jar"
 FABRIC_INSTALLER_JAR="fabric-installer.jar"
 MINECRAFT_SERVER_JAR="fabric-server-launch.jar"
-RAM_ALLOCATION="6G"
+
+# Accept the custom server directory name and RAM allocation as parameters
+server_dir="$1"
+RAM_ALLOCATION="$2"
 
 # Check if the directory name was provided
 if [[ -z "$server_dir" ]]; then

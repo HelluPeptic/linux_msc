@@ -4,10 +4,10 @@ PAPER_VERSION="1.20.1"
 PAPER_BUILD="196"
 PAPER_JAR="paper-$PAPER_VERSION-$PAPER_BUILD.jar"
 PAPER_API_URL="https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION/builds/$PAPER_BUILD/downloads/$PAPER_JAR"
-RAM_ALLOCATION="6G"
 
-# Accept the custom server directory name as a parameter
+# Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
+RAM_ALLOCATION="$2"
 
 # Check if the directory name was provided
 if [[ -z "$server_dir" ]]; then

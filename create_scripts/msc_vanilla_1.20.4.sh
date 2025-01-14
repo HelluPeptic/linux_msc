@@ -3,10 +3,10 @@
 MINECRAFT_VERSION="1.20.4"
 MINECRAFT_SERVER_JAR="server.jar"
 MINECRAFT_DOWNLOAD_URL="https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar"
-RAM_ALLOCATION="6G"
 
-# Accept the custom server directory name as a parameter
+# Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
+RAM_ALLOCATION="$2"
 
 # Check if the directory name was provided
 if [[ -z "$server_dir" ]]; then
