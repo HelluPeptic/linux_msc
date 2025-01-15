@@ -94,7 +94,7 @@ if [[ -z "$RAM_ALLOCATION" ]]; then
 fi
 
 # Prompt for server name
-RAM_ALLOCATION=$(get_server_name)
+server_name=$(get_server_name)
 
 if [[ -z "$server_name" ]]; then
     echo "Server name cannot be empty. Exiting..."
