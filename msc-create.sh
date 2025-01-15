@@ -1,32 +1,32 @@
 #!/bin/bash
 
+# Function to prompt for RAM allocation
 # Function to recommend and prompt for RAM allocation
 get_ram_allocation() {
+    local ram
+    ram=$(dialog --inputbox "Enter the amount of RAM to allocate (e.g., 2G, 4G, 8G):" 10 50 "2G" 2>&1 >/dev/tty)
+    echo "Calculating optimal RAM allocation..."
 
     # Get total system memory in MB
     total_mem=$(free -m | awk '/^Mem:/{print $2}')
 
     # Calculate 90% of total memory
-    recommended_ram=$((total_mem))
+    recommended_ram=$((total_mem * 90 / 100))
 
     # Convert recommended RAM to GB for better user understanding
     recommended_gb=$(awk "BEGIN {printf \"%.1f\", $recommended_ram/1024}")
 
     # Provide the recommended RAM allocation to the user
     ram=$(dialog --inputbox \
-        "Enter the amount of RAM to allocate to the server (in MB or GB):\n\nRecommended: ${recommended_ram}MB (~${recommended_gb}GB)" \
+        "Enter the amount of RAM to allocate to the server (in MB):\n\nRecommended: ${recommended_ram}MB (~${recommended_gb}GB)" \
         10 50 "${recommended_ram}" 2>&1 >/dev/tty)
 
-    # Validate user input and format it
-    if [[ "$ram" =~ ^[0-9]+$ ]]; then
-        dialog --msgbox "Invalid input. Please specify the measurement (MB or G)." 10 50
+    # Validate user input
+    if ! [[ "$ram" =~ ^[0-9]+$ ]]; then
+        echo "Invalid input. Please enter a numeric value."
         exit 1
-    elif [[ "$ram" =~ ^[0-9]+[MG]B?$ ]]; then
-        # Input is already in the correct format
-        :
-    else
-        dialog --msgbox "Invalid input. Please enter a numeric value followed by MB or G." 10 50
-        exit 1
+    elif [[ "$ram" -lt 512 ]]; then
+        echo "Warning: Allocating less than 512MB may cause performance issues."
     fi
 
     echo "$ram"
@@ -34,9 +34,9 @@ get_ram_allocation() {
 
 # Function to prompt for server name
 get_server_name() {
-    local server_name
-    server_name=$(dialog --inputbox "Enter a name for your server:" 10 50 2>&1 >/dev/tty)
-    echo "$server_name"
+    local name
+    name=$(dialog --inputbox "Enter a name for your server:" 10 50 2>&1 >/dev/tty)
+    echo "$name"
 }
 
 # Main Menu
@@ -50,8 +50,7 @@ options=(
 
 choice=$(dialog --clear \
                 --title "Choose a Minecraft Client" \
-                --menu "Select an option:" \
-                15 50 5 \
+                --menu "Select an option using the arrow keys, or press Enter:" 15 40 5 \
                 "${options[@]}" \
                 2>&1 >/dev/tty)
 
@@ -90,10 +89,11 @@ case $version_choice in
     5) echo "Exiting..."; exit 0 ;;
 esac
 
+# Prompt for RAM allocation
 # Prompt for RAM allocation with recommendation
-RAM_ALLOCATION=$(get_ram_allocation)
+server_ram=$(get_ram_allocation)
 
-if [[ -z "$RAM_ALLOCATION" ]]; then
+if [[ -z "$server_ram" ]]; then
     echo "RAM allocation cannot be empty. Exiting..."
     exit 1
 fi
@@ -124,34 +124,34 @@ fi
 case $server_type in
     "vanilla")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_vanilla_1.20.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_vanilla_1.20.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" "$server_ram" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" "$server_ram" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_vanilla_1.20.4.sh" "$server_dir" "$server_ram" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_vanilla_1.20.1.sh" "$server_dir" "$server_ram" ;;
         esac
         ;;
     "paper")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_paper_1.20.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_paper_1.20.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" "$server_ram" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" "$server_ram" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_paper_1.20.4.sh" "$server_dir" "$server_ram" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_paper_1.20.1.sh" "$server_dir" "$server_ram" ;;
         esac
         ;;
     "fabric")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_fabric_1.20.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" "$server_ram" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" "$server_ram" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" "$server_ram" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_fabric_1.20.1.sh" "$server_dir" "$server_ram" ;;
         esac
         ;;
     "forge")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" "$server_ram" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" "$server_ram" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" "$server_ram" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" "$server_ram" ;;
         esac
         ;;
 esac
