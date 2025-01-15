@@ -19,15 +19,13 @@ get_ram_allocation() {
 
     # Validate user input and format it
     if [[ "$ram" =~ ^[0-9]+$ ]]; then
-        if [[ "$ram" -lt 512 ]]; then
-            dialog --msgbox "Warning: Allocating less than 512MB may cause performance issues." 10 50
-        fi
-        ram="${ram}MB"
+        dialog --msgbox "Invalid input. Please specify the measurement (MB or G)." 10 50
+        exit 1
     elif [[ "$ram" =~ ^[0-9]+[MG]B?$ ]]; then
         # Input is already in the correct format
         :
     else
-        dialog --msgbox "Invalid input. Please enter a numeric value followed by MB or GB." 10 50
+        dialog --msgbox "Invalid input. Please enter a numeric value followed by MB or G." 10 50
         exit 1
     fi
 
