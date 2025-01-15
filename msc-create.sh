@@ -2,19 +2,28 @@
 
 # Function to prompt for RAM allocation
 get_ram_allocation() {
+    echo "Calculating optimal RAM allocation..."
+
     # Get total system memory in MB
     total_mem=$(free -m | awk '/^Mem:/{print $2}')
 
     # Calculate 90% of total memory
     recommended_ram=$((total_mem * 90 / 100))
 
-    # Provide the recommended RAM allocation to the user
-    ram=$(dialog --inputbox "Enter the amount of RAM to allocate (e.g., 2048MB):\nRecommended: ${recommended_ram}MB" 10 50 "${recommended_ram}MB" 2>&1 >/dev/tty)
+    # Convert recommended RAM to GB for better user understanding
+    recommended_gb=$(awk "BEGIN {printf \"%.1f\", $recommended_ram/1024}")
 
-    # Validate user input and format it
-    if [[ ! "$ram" =~ ^[0-9]+MB$ ]]; then
-        dialog --msgbox "Invalid input. Please enter a numeric value followed by MB (e.g., 2048MB)." 10 50
+    # Provide the recommended RAM allocation to the user
+    ram=$(dialog --inputbox \
+        "Enter the amount of RAM to allocate to the server (in MB):\n\nRecommended: ${recommended_ram}MB (~${recommended_gb}GB)" \
+        10 50 "${recommended_ram}" 2>&1 >/dev/tty)
+
+    # Validate user input
+    if ! [[ "$ram" =~ ^[0-9]+$ ]]; then
+        echo "Invalid input. Please enter a numeric value."
         exit 1
+    elif [[ "$ram" -lt 512 ]]; then
+        echo "Warning: Allocating less than 512MB may cause performance issues."
     fi
 
     echo "$ram"
