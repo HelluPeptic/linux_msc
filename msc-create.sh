@@ -2,8 +2,21 @@
 
 # Function to prompt for RAM allocation
 get_ram_allocation() {
-    local ram
-    ram=$(dialog --inputbox "Enter the amount of RAM to allocate (e.g., 2G, 4G, 8G):" 10 50 "2G" 2>&1 >/dev/tty)
+    # Get total system memory in MB
+    total_mem=$(free -m | awk '/^Mem:/{print $2}')
+
+    # Calculate 90% of total memory
+    recommended_ram=$((total_mem * 90 / 100))
+
+    # Provide the recommended RAM allocation to the user
+    ram=$(dialog --inputbox "Enter the amount of RAM to allocate (e.g., 2048MB):\nRecommended: ${recommended_ram}MB" 10 50 "${recommended_ram}MB" 2>&1 >/dev/tty)
+
+    # Validate user input and format it
+    if [[ ! "$ram" =~ ^[0-9]+MB$ ]]; then
+        dialog --msgbox "Invalid input. Please enter a numeric value followed by MB (e.g., 2048MB)." 10 50
+        exit 1
+    fi
+
     echo "$ram"
 }
 
