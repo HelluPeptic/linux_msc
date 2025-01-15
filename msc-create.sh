@@ -2,13 +2,12 @@
 
 # Function to recommend and prompt for RAM allocation
 get_ram_allocation() {
-    echo "Calculating optimal RAM allocation..."
 
     # Get total system memory in MB
     total_mem=$(free -m | awk '/^Mem:/{print $2}')
 
     # Calculate 90% of total memory
-    recommended_ram=$((total_mem * 90 / 100))
+    recommended_ram=$((total_mem))
 
     # Convert recommended RAM to GB for better user understanding
     recommended_gb=$(awk "BEGIN {printf \"%.1f\", $recommended_ram/1024}")
@@ -87,15 +86,15 @@ case $version_choice in
 esac
 
 # Prompt for RAM allocation with recommendation
-server_ram=$(get_ram_allocation)
+RAM_ALLOCATION=$(get_ram_allocation)
 
-if [[ -z "$server_ram" ]]; then
+if [[ -z "$RAM_ALLOCATION" ]]; then
     echo "RAM allocation cannot be empty. Exiting..."
     exit 1
 fi
 
 # Prompt for server name
-server_name=$(get_server_name)
+RAM_ALLOCATION=$(get_server_name)
 
 if [[ -z "$server_name" ]]; then
     echo "Server name cannot be empty. Exiting..."
@@ -120,34 +119,34 @@ fi
 case $server_type in
     "vanilla")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" "$server_ram" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" "$server_ram" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_vanilla_1.20.4.sh" "$server_dir" "$server_ram" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_vanilla_1.20.1.sh" "$server_dir" "$server_ram" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_vanilla_1.20.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_vanilla_1.20.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
         esac
         ;;
     "paper")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" "$server_ram" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" "$server_ram" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_paper_1.20.4.sh" "$server_dir" "$server_ram" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_paper_1.20.1.sh" "$server_dir" "$server_ram" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_paper_1.20.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_paper_1.20.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
         esac
         ;;
     "fabric")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" "$server_ram" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" "$server_ram" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" "$server_ram" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_fabric_1.20.1.sh" "$server_dir" "$server_ram" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;s
+            "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_fabric_1.20.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
         esac
         ;;
     "forge")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" "$server_ram" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" "$server_ram" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" "$server_ram" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" "$server_ram" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" "$RAM_ALLOCATION" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" "$RAM_ALLOCATION" ;;
         esac
         ;;
 esac

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-server_dir="$1"
 MINECRAFT_VERSION="1.21.4"
 FABRIC_INSTALLER_URL="https://maven.fabricmc.net/net/fabricmc/fabric-installer/0.11.2/fabric-installer-0.11.2.jar"
 FABRIC_INSTALLER_JAR="fabric-installer.jar"
@@ -71,7 +70,7 @@ download_fabric_server() {
 
     # Create a start script
     echo "#!/bin/bash
-java -Xms1G -Xmx$RAM_ALLOCATION -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
+java -Xms2G -Xmx$RAM_ALLOCATION -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
 
     chmod +x start.sh
     echo "Fabric server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$server_dir' and run: 'bash start.sh'."
