@@ -16,7 +16,7 @@ get_ram_allocation() {
     # Provide the recommended RAM allocation to the user
     ram=$(dialog --inputbox \
         "Enter the amount of RAM to allocate to the server (in MB):\n\nRecommended: ${recommended_ram}MB (~${recommended_gb}GB)" \
-        10 50 "${recommended_ram}" 2>&1 >/dev/tty)
+        10 50 "${recommended_ram}M" 2>&1 >/dev/tty)
 
     # Validate user input
     if [[ "$ram" -lt 512 ]]; then
