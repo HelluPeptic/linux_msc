@@ -2,7 +2,8 @@
 
 # Function to prompt for RAM allocation
 get_ram_allocation() {
-    
+    echo "Calculating optimal RAM allocation..." >&2
+
     # Get total system memory in MB
     total_mem=$(free -m | awk '/^Mem:/{print $2}')
 
@@ -19,14 +20,16 @@ get_ram_allocation() {
 
     # Validate user input
     if ! [[ "$ram" =~ ^[0-9]+$ ]]; then
-        echo "Invalid input. Please enter a numeric value."
+        echo "Invalid input. Please enter a numeric value." >&2
         exit 1
     elif [[ "$ram" -lt 512 ]]; then
-        echo "Warning: Allocating less than 512MB may cause performance issues."
+        echo "Warning: Allocating less than 512MB may cause performance issues." >&2
     fi
 
+    # Only output the RAM value to stdout
     echo "$ram"
 }
+
 
 # Function to prompt for server name
 get_server_name() {
