@@ -14,15 +14,21 @@ get_ram_allocation() {
 
     # Provide the recommended RAM allocation to the user
     ram=$(dialog --inputbox \
-        "Enter the amount of RAM to allocate to the server (in MB):\n\nRecommended: ${recommended_ram}MB (~${recommended_gb}GB)" \
+        "Enter the amount of RAM to allocate to the server (in MB or GB):\n\nRecommended: ${recommended_ram}MB (~${recommended_gb}GB)" \
         10 50 "${recommended_ram}" 2>&1 >/dev/tty)
 
-    # Validate user input
-    if ! [[ "$ram" =~ ^[0-9]+$ ]]; then
-        echo "Invalid input. Please enter a numeric value."
+    # Validate user input and format it
+    if [[ "$ram" =~ ^[0-9]+$ ]]; then
+        if [[ "$ram" -lt 512 ]]; then
+            echo "Warning: Allocating less than 512MB may cause performance issues."
+        fi
+        ram="${ram}MB"
+    elif [[ "$ram" =~ ^[0-9]+[MG]B?$ ]]; then
+        # Input is already in the correct format
+        :
+    else
+        echo "Invalid input. Please enter a numeric value followed by MB or GB."
         exit 1
-    elif [[ "$ram" -lt 512 ]]; then
-        echo "Warning: Allocating less than 512MB may cause performance issues."
     fi
 
     echo "$ram"
