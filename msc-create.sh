@@ -2,8 +2,7 @@
 
 # Function to prompt for RAM allocation
 get_ram_allocation() {
-    echo "Calculating optimal RAM allocation..."
-
+    
     # Get total system memory in MB
     total_mem=$(free -m | awk '/^Mem:/{print $2}')
 
