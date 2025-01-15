@@ -64,7 +64,7 @@ download_forge_server() {
     echo "eula=true" > eula.txt
 
     # Configure JVM arguments with specified RAM allocation
-    echo "-Xms2G" > user_jvm_args.txt
+    echo "-Xms1024M" > user_jvm_args.txt
     echo "-Xmx$ram_allocation" >> user_jvm_args.txt
 
     # Create the start script

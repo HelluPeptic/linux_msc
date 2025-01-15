@@ -70,7 +70,7 @@ download_fabric_server() {
 
     # Create a start script
     echo "#!/bin/bash
-java -Xms1G -Xmx$ram_allocation -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
+java -Xms1024M -Xmx$ram_allocation -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
 
     chmod +x start.sh
     echo "Fabric server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$server_dir' and run: 'bash start.sh'."

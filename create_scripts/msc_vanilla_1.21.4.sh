@@ -19,10 +19,9 @@ fi
 mkdir -p "$server_dir"
 
 # Create the startup script in the server directory
-cat <<EOF > "$server_dir/start.sh"
-#!/bin/bash
-java -Xmx$ram_allocation -Xms1024M -jar vanilla_$MINECRAFT_VERSION.jar nogui
-EOF
+echo "#!/bin/bash
+java -Xms1024M -Xmx${ram_allocation} -jar server.jar nogui" > "$server_dir/start.sh"
+
 chmod +x "$server_dir/start.sh"
 
 # Placeholder for the server JAR file

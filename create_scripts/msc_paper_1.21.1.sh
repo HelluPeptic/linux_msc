@@ -54,7 +54,8 @@ download_server() {
 
     echo "eula=true" > eula.txt
     echo "#!/bin/bash
-    java -Xms1G -Xmx$ram_allocation -jar $PAPER_JAR nogui" > start.sh
+java -Xms1024M -Xmx$ram_allocation -jar $PAPER_JAR nogui" > start.sh
+
     chmod +x start.sh
     echo "Server setup complete! Navigate to '$SERVER_DIR' and run './start.sh' to start the server."
 }

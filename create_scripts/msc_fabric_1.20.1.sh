@@ -82,7 +82,7 @@ download_fabric_server() {
 
     # Create a start script
     echo "#!/bin/bash
-java -Xms1G -Xmx$ram_allocation -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
+java -Xms1024M -Xmx$ram_allocation -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
 
     # Ensure the start.sh file has executable permissions
     chmod +x start.sh
