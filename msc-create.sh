@@ -19,10 +19,7 @@ get_ram_allocation() {
         10 50 "${recommended_ram}" 2>&1 >/dev/tty)
 
     # Validate user input
-    if ! [[ "$ram" =~ ^[0-9]+$ ]]; then
-        echo "Invalid input. Please enter a numeric value." >&2
-        exit 1
-    elif [[ "$ram" -lt 512 ]]; then
+    if [[ "$ram" -lt 512 ]]; then
         echo "Warning: Allocating less than 512MB may cause performance issues." >&2
     fi
 
