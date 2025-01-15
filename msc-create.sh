@@ -1,9 +1,31 @@
 #!/bin/bash
 
-# Function to prompt for RAM allocation
+# Function to recommend and prompt for RAM allocation
 get_ram_allocation() {
-    local ram
-    ram=$(dialog --inputbox "Enter the amount of RAM to allocate (e.g., 2G, 4G, 8G):" 10 50 "2G" 2>&1 >/dev/tty)
+    echo "Calculating optimal RAM allocation..."
+
+    # Get total system memory in MB
+    total_mem=$(free -m | awk '/^Mem:/{print $2}')
+
+    # Calculate 90% of total memory
+    recommended_ram=$((total_mem * 90 / 100))
+
+    # Convert recommended RAM to GB for better user understanding
+    recommended_gb=$(awk "BEGIN {printf \"%.1f\", $recommended_ram/1024}")
+
+    # Provide the recommended RAM allocation to the user
+    ram=$(dialog --inputbox \
+        "Enter the amount of RAM to allocate to the server (in MB):\n\nRecommended: ${recommended_ram}MB (~${recommended_gb}GB)" \
+        10 50 "${recommended_ram}" 2>&1 >/dev/tty)
+
+    # Validate user input
+    if ! [[ "$ram" =~ ^[0-9]+$ ]]; then
+        echo "Invalid input. Please enter a numeric value."
+        exit 1
+    elif [[ "$ram" -lt 512 ]]; then
+        echo "Warning: Allocating less than 512MB may cause performance issues."
+    fi
+
     echo "$ram"
 }
 
@@ -64,7 +86,7 @@ case $version_choice in
     5) echo "Exiting..."; exit 0 ;;
 esac
 
-# Prompt for RAM allocation
+# Prompt for RAM allocation with recommendation
 server_ram=$(get_ram_allocation)
 
 if [[ -z "$server_ram" ]]; then
