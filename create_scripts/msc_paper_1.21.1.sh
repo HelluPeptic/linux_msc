@@ -6,7 +6,7 @@ PAPER_JAR="paper-$PAPER_VERSION.jar"
 
 # Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
-RAM_ALLOCATION="$2"
+ram_allocation="$2"
 
 # Ensure a server directory name is provided
 if [ -z "$SERVER_DIR" ]; then
@@ -54,7 +54,7 @@ download_server() {
 
     echo "eula=true" > eula.txt
     echo "#!/bin/bash
-    java -Xms1G -Xmx$RAM_ALLOCATION -jar $PAPER_JAR nogui" > start.sh
+    java -Xms1G -Xmx$ram_allocation -jar $PAPER_JAR nogui" > start.sh
     chmod +x start.sh
     echo "Server setup complete! Navigate to '$SERVER_DIR' and run './start.sh' to start the server."
 }

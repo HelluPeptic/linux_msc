@@ -7,7 +7,7 @@ MINECRAFT_SERVER_JAR="fabric-server-launch.jar"
 
 # Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
-RAM_ALLOCATION="$2"
+ram_allocation="$2"
 
 # Check if the directory name was provided
 if [[ -z "$server_dir" ]]; then
@@ -70,7 +70,7 @@ download_fabric_server() {
 
     # Create a start script
     echo "#!/bin/bash
-java -Xms2G -Xmx$RAM_ALLOCATION -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
+java -Xms2G -Xmx$ram_allocation -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
 
     chmod +x start.sh
     echo "Fabric server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$server_dir' and run: 'bash start.sh'."

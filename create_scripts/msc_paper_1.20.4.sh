@@ -7,7 +7,7 @@ PAPER_API_URL="https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION/
 
 # Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
-RAM_ALLOCATION="$2"
+ram_allocation="$2"
 
 # Check if the directory name was provided
 if [[ -z "$server_dir" ]]; then
@@ -21,7 +21,7 @@ mkdir -p "$server_dir"
 # Create the startup script in the server directory
 cat <<EOF > "$server_dir/start.sh"
 #!/bin/bash
-java -Xmx$RAM_ALLOCATION -Xms1024M -jar $PAPER_JAR nogui
+java -Xmx$ram_allocation -Xms1024M -jar $PAPER_JAR nogui
 EOF
 chmod +x "$server_dir/start.sh"
 
@@ -76,7 +76,7 @@ download_server() {
 
     # Create a start script
     echo "#!/bin/bash
-java -Xms1G -Xmx$RAM_ALLOCATION -jar $PAPER_JAR nogui" > start.sh
+java -Xms1G -Xmx$ram_allocation -jar $PAPER_JAR nogui" > start.sh
 
     chmod +x start.sh
     echo "Server is ready! To start the server, navigate to '$server_dir' and run: 'bash start.sh'."
