@@ -20,14 +20,14 @@ get_ram_allocation() {
     # Validate user input and format it
     if [[ "$ram" =~ ^[0-9]+$ ]]; then
         if [[ "$ram" -lt 512 ]]; then
-            echo "Warning: Allocating less than 512MB may cause performance issues."
+            dialog --msgbox "Warning: Allocating less than 512MB may cause performance issues." 10 50
         fi
         ram="${ram}MB"
     elif [[ "$ram" =~ ^[0-9]+[MG]B?$ ]]; then
         # Input is already in the correct format
         :
     else
-        echo "Invalid input. Please enter a numeric value followed by MB or GB."
+        dialog --msgbox "Invalid input. Please enter a numeric value followed by MB or GB." 10 50
         exit 1
     fi
 
@@ -52,7 +52,8 @@ options=(
 
 choice=$(dialog --clear \
                 --title "Choose a Minecraft Client" \
-                --menu "Select an option using the arrow keys, or press Enter:" 15 40 5 \
+                --menu "Select an option:" \
+                15 50 5 \
                 "${options[@]}" \
                 2>&1 >/dev/tty)
 
