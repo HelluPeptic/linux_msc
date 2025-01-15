@@ -31,7 +31,7 @@ get_ram_allocation() {
 # Function to prompt for server name
 get_server_name() {
     local server_name
-    name=$(dialog --inputbox "Enter a name for your server:" 10 50 2>&1 >/dev/tty)
+    server_name=$(dialog --inputbox "Enter a name for your server:" 10 50 2>&1 >/dev/tty)
     echo "$server_name"
 }
 
