@@ -50,6 +50,10 @@ install_java_21() {
     # Step 4: Apply the environment variables
     source /etc/profile.d/jdk21.sh
 
+    # Step 5: Enable java 21 to appear in the alternatives system
+    sudo update-alternatives --install /usr/bin/java java /opt/jdk-21/bin/java 2
+    sudo update-alternatives --install /usr/bin/javac javac /opt/jdk-21/bin/javac 2
+
     echo "Java 21 installation completed and environment variables set."
 }
 

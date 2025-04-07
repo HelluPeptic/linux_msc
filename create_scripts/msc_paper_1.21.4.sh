@@ -32,12 +32,30 @@ switch_to_java21() {
 EOF
 }
 
-# Function to install Java 21 manually from Adoptium
+# Function to install Java 21 if needed
 install_java_21() {
-    echo "Installing Java 21..."
-    sudo apt update
-    sudo apt install -y default-jdk
-    sudo apt install -y openjdk-21-jdk
+    echo "Installing Java 21 manually..."
+
+    # Step 1: Download OpenJDK 21 (aarch64 build) from Adoptium
+    cd ~
+    wget https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.2%2B13/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.2_13.tar.gz
+
+    # Step 2: Extract and move it to /opt
+    tar -xvf OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.2_13.tar.gz
+    sudo mv jdk-21.0.2+13 /opt/jdk-21
+
+    # Step 3: Create a system-wide environment setup
+    echo "export JAVA_HOME=/opt/jdk-21" | sudo tee /etc/profile.d/jdk21.sh
+    echo "export PATH=\$JAVA_HOME/bin:\$PATH" | sudo tee -a /etc/profile.d/jdk21.sh
+
+    # Step 4: Apply the environment variables
+    source /etc/profile.d/jdk21.sh
+
+    # Step 5: Enable java 21 to appear in the alternatives system
+    sudo update-alternatives --install /usr/bin/java java /opt/jdk-21/bin/java 2
+    sudo update-alternatives --install /usr/bin/javac javac /opt/jdk-21/bin/javac 2
+
+    echo "Java 21 installation completed and environment variables set."
 }
 
 # Function to download the Minecraft server .jar file
