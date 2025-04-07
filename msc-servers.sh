@@ -52,51 +52,21 @@ EOF
 start_server() {
     local full_server_name="$1"  # Full server name in format [name]_[client]_[version]
 
-    # Prevent starting a server if any server is already running
-    if any_server_running; then
-        dialog --msgbox "Another server is already running. Please stop it before starting a new one." 10 50
-        return
-    fi
-
-    # Extract the version number from the server name (assuming the version is always the last part, after the last '_')
-    local version=$(echo "$full_server_name" | awk -F'_' '{print $NF}')
-
-    # Switch Java version based on server version
-    case "$version" in
-        "1.21.1")
-            switch_to_java21
-            ;;
-        "1.20.4"|"1.20.1")
-            switch_to_java17
-            ;;
-        *)
-            echo "No specific Java version switch required for $full_server_name"
-            ;;
-    esac
-
     # Check if start.sh exists in the full server directory
     if [ -f "$full_server_name/start.sh" ]; then
-        # Start the server in a detached screen and handle crashes
+        # Start the server in a detached screen and handle stops/crashes
         screen -dmS "$full_server_name" bash -c "
             cd $full_server_name && bash start.sh;
-            exit_code=\$?;
-            if [ \$exit_code -ne 0 ]; then
-                echo 'Server crashed. Press Enter to close.';
-                read;
-            fi
+            echo 'Server closed. Press Enter to continue.';
+            read
         "
 
-        # Check if the screen session was created
-        if screen -list | grep -q "$full_server_name"; then
-            dialog --msgbox "Server $full_server_name started successfully." 10 50
-        else
-            dialog --msgbox "Failed to start server $full_server_name. Please check start.sh." 10 50
-        fi
+        # Notify the user that the server has started
+        dialog --msgbox "Server $full_server_name started successfully." 10 50
     else
         dialog --msgbox "start.sh not found in $full_server_name. Cannot start server." 10 50
     fi
 }
-echo "Full server name: $full_server_name"
 
 # Function to edit server.properties
 edit_properties() {
@@ -132,8 +102,8 @@ stop_server() {
     local server_name="$1"
     dialog --yesno "Are you sure you want to stop the server $server_name?" 10 50
     if [ $? -eq 0 ]; then
-        screen -S "$server_name" -X quit
-        dialog --msgbox "Server $server_name stopped." 10 50
+        screen -S "$server_name" -X stuff "stop$(printf \\r)"  # Send the "stop" command to the server
+        dialog --msgbox "Stop command sent to server $server_name. Please wait for it to close." 10 50
     fi
 }
 
