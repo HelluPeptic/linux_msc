@@ -76,8 +76,8 @@ start_server() {
 
     # Check if start.sh exists in the full server directory
     if [ -f "$full_server_name/start.sh" ]; then
-        # Start the server in a detached screen and keep the screen open after crash
-        screen -dmS "$full_server_name" bash -c "cd $full_server_name && bash start.sh; echo 'Server crashed. Press Enter to close.'; read"
+        # Start the server in a detached screen and capture the exit status
+        screen -dmS "$full_server_name" bash -c "cd $full_server_name && bash start.sh; exit_code=\$?; if [ \$exit_code -ne 0 ]; then echo 'Server crashed. Press Enter to close.'; read; fi"
 
         # Check if the screen session was created
         if screen -list | grep -q "$full_server_name"; then
