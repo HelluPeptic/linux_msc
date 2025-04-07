@@ -132,13 +132,17 @@ stop_server() {
 
 # Main menu loop
 while true; do
-    # Fetch all server directories
-    server_dirs=(*/)
-    server_dirs=("${server_dirs[@]%/}") # Remove trailing slash
+    # Fetch all server directories that contain a start.sh file
+    server_dirs=()
+    for dir in */; do
+        if [ -f "$dir/start.sh" ]; then
+            server_dirs+=("${dir%/}") # Remove trailing slash
+        fi
+    done
 
     # If no servers are found, display a message and exit
     if [ ${#server_dirs[@]} -eq 0 ]; then
-        dialog --title "No Servers Found" --msgbox "No Minecraft servers found in the current directory." 10 50
+        dialog --title "No Servers Found" --msgbox "No Minecraft servers with a start.sh file found in the current directory." 10 50
         clear
         exit 0
     fi
