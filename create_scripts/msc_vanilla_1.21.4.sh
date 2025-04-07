@@ -33,12 +33,21 @@ echo "Vanilla server $MINECRAFT_VERSION created successfully in $server_dir."
 
 # Function to install Java 21 if needed
 install_java_21() {
-    echo "Installing Java 21..."
-    sudo apt update
-    sudo apt install -y software-properties-common
-    sudo add-apt-repository -y ppa:openjdk-r/ppa
-    sudo apt update
-    sudo apt install -y openjdk-21-jdk
+    echo "Installing Java 21 manually..."
+    
+    # Download OpenJDK 21 from Adoptium
+    wget -O openjdk-21.tar.gz https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.0+35/OpenJDK21U-jdk_x64_linux_hotspot_21.0.0_35.tar.gz
+
+    # Extract the tarball
+    sudo mkdir -p /usr/lib/jvm
+    sudo tar -xzf openjdk-21.tar.gz -C /usr/lib/jvm
+
+    # Set up alternatives for Java
+    sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-21.0.0+35/bin/java 1
+    sudo update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk-21.0.0+35/bin/javac 1
+
+    # Clean up
+    rm openjdk-21.tar.gz
 }
 
 # Function to automatically switch Java version to Java 21
