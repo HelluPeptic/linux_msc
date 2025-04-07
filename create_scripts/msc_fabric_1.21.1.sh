@@ -18,7 +18,8 @@ fi
 install_java_21() {
     echo "Installing Java 21..."
     sudo apt update
-    sudo apt install -y openjdk-21-jdk openjdk-21-jre
+    sudo apt install -y default-jdk
+    sudo apt install -y openjdk-21-jdk
 }
 
 # Function to automatically switch Java version to Java 21
