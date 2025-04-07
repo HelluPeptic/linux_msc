@@ -35,7 +35,9 @@ echo "Vanilla server $MINECRAFT_VERSION created successfully in $server_dir."
 install_java_21() {
     echo "Installing Java 21..."
     sudo apt update
-    sudo apt install -y default-jdk
+    sudo apt install -y software-properties-common
+    sudo add-apt-repository -y ppa:openjdk-r/ppa
+    sudo apt update
     sudo apt install -y openjdk-21-jdk
 }
 
