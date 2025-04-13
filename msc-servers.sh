@@ -167,7 +167,7 @@ while true; do
     full_server_name="$selected_server"
 
     # Check the server's status
-    status=$(is_server_running("$full_server_name"))
+    status=$(is_server_running "$full_server_name")
 
     # Build actions based on status
     if [ "$status" == "Running" ]; then
