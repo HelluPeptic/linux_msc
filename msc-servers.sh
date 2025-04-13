@@ -22,11 +22,13 @@ any_server_running() {
     fi
 }
 
-# Function to check if a server is running
+# Function to check if a server is running and return its status
 is_server_running() {
     local server_name="$1"
     if screen -list | grep -q "$server_name"; then
         echo "Running"
+    elif [ -f "/tmp/${server_name}_status" ]; then
+        cat "/tmp/${server_name}_status"
     else
         echo "Not Running"
     fi
@@ -101,8 +103,19 @@ stop_server() {
     local server_name="$1"
     dialog --yesno "Are you sure you want to stop the server $server_name?" 10 50
     if [ $? -eq 0 ]; then
-        screen -S "$server_name" -X stuff "stop$(printf \\r)"  # Send the "stop" command to the server
-        dialog --msgbox "Stop command sent to server $server_name. Please wait for it to close." 10 50
+        # Send the "stop" command to the server
+        screen -S "$server_name" -X stuff "stop$(printf \\r)"
+        
+        # Update the status to "Shutting Down" in the menu
+        echo "Shutting Down" > "/tmp/${server_name}_status"
+
+        # Wait for the server to fully stop
+        while screen -list | grep -q "$server_name"; do
+            sleep 1
+        done
+
+        # Update the status to "Not Running" once the server is fully stopped
+        echo "Not Running" > "/tmp/${server_name}_status"
     fi
 }
 
@@ -169,6 +182,8 @@ while true; do
             3) kill_server "$full_server_name" ;;
             4) ;;
         esac
+    elif [ "$status" == "Shutting Down" ]; then
+        dialog --msgbox "The server $full_server_name is currently shutting down. Please wait." 10 50
     else
         action=$(dialog --menu "Manage $full_server_name (Not Running):" 15 50 10 \
             "1" "Start Server" \
