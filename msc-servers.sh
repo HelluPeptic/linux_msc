@@ -167,7 +167,7 @@ while true; do
     full_server_name="$selected_server"
 
     # Check the server's status
-    status=$(is_server_running "$full_server_name")
+    status=$(is_server_running("$full_server_name"))
 
     # Build actions based on status
     if [ "$status" == "Running" ]; then
@@ -179,7 +179,7 @@ while true; do
 
         case $action in
             1) view_console "$full_server_name" ;;
-            2) stop_server "$full_server_name" ;;
+            2) stop_server "$full_server_name" ;;  # Update status dynamically
             3) kill_server "$full_server_name" ;;
             4) ;;
         esac
