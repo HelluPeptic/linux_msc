@@ -54,11 +54,10 @@ start_server() {
 
     # Check if start.sh exists in the full server directory
     if [ -f "$full_server_name/start.sh" ]; then
-        # Start the server in a detached screen and handle stops/crashes
+        # Start the server in a detached screen
         screen -dmS "$full_server_name" bash -c "
             cd $full_server_name && bash start.sh;
-            echo 'Server closed. Press Enter to continue.';
-            read
+            echo 'Server closed.';
         "
 
         # Notify the user that the server has started
@@ -107,6 +106,16 @@ stop_server() {
     fi
 }
 
+# Function to kill a running server
+kill_server() {
+    local server_name="$1"
+    dialog --yesno "Are you sure you want to forcefully kill the server $server_name?" 10 50
+    if [ $? -eq 0 ]; then
+        screen -S "$server_name" -X quit  # Forcefully terminate the screen session
+        dialog --msgbox "Server $server_name has been forcefully killed." 10 50
+    fi
+}
+
 # Main menu loop
 while true; do
     # Fetch all server directories that contain a start.sh file
@@ -151,12 +160,14 @@ while true; do
         action=$(dialog --menu "Manage $full_server_name (Running):" 15 50 10 \
             "1" "View Console" \
             "2" "Stop Server" \
-            "3" "Exit Menu" 3>&1 1>&2 2>&3)
+            "3" "Kill Server" \
+            "4" "Exit Menu" 3>&1 1>&2 2>&3)
 
         case $action in
             1) view_console "$full_server_name" ;;
             2) stop_server "$full_server_name" ;;
-            3) ;;
+            3) kill_server "$full_server_name" ;;
+            4) ;;
         esac
     else
         action=$(dialog --menu "Manage $full_server_name (Not Running):" 15 50 10 \
