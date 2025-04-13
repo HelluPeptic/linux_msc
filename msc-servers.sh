@@ -184,6 +184,7 @@ while true; do
             4) ;;
         esac
     elif [ "$status" == "Shutting Down" ]; then
+        # Refresh the menu while the server is shutting down
         dialog --msgbox "The server $full_server_name is currently shutting down. Please wait." 10 50
     else
         action=$(dialog --menu "Manage $full_server_name (Not Running):" 15 50 10 \
