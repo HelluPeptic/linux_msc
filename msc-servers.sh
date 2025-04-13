@@ -103,19 +103,20 @@ stop_server() {
     local server_name="$1"
     dialog --yesno "Are you sure you want to stop the server $server_name?" 10 50
     if [ $? -eq 0 ]; then
-        # Send the "stop" command to the server
-        screen -S "$server_name" -X stuff "stop$(printf \\r)"
-        
-        # Update the status to "Shutting Down" in the menu
+        # Update the status to "Shutting Down" immediately
         echo "Shutting Down" > "/tmp/${server_name}_status"
 
-        # Wait for the server to fully stop
-        while screen -list | grep -q "$server_name"; do
-            sleep 1
-        done
+        # Send the "stop" command to the server
+        screen -S "$server_name" -X stuff "stop$(printf \\r)"
 
-        # Update the status to "Not Running" once the server is fully stopped
-        echo "Not Running" > "/tmp/${server_name}_status"
+        # Start a background process to monitor the shutdown
+        (
+            while screen -list | grep -q "$server_name"; do
+                sleep 1
+            done
+            # Update the status to "Not Running" once the server is fully stopped
+            echo "Not Running" > "/tmp/${server_name}_status"
+        ) &
     fi
 }
 
