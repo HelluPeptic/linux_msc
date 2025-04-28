@@ -98,11 +98,22 @@ build_folia() {
         echo "Debug: Current working directory after navigating to SERVER_DIR is $(pwd)"
 
         # Dynamically search for the Folia jar within the created folder
-        folia_jar_path=$(find . -name "folia-*.jar" | head -n 1)
+        folia_jar_path=$(find "$SERVER_DIR" -name "folia-bundler-*.jar" | head -n 1)
         if [ -f "$folia_jar_path" ]; then
             echo "Folia jar found: $folia_jar_path"
-            mv "$folia_jar_path" "$SERVER_DIR/$FOLIA_JAR"
-            echo "Folia jar successfully moved and renamed to $FOLIA_JAR."
+
+            # Remove the existing Paper jar
+            paper_jar_path="$SERVER_DIR/paper-1.21.4.jar"
+            if [ -f "$paper_jar_path" ]; then
+                echo "Removing Paper jar: $paper_jar_path"
+                rm "$paper_jar_path"
+            else
+                echo "Warning: Paper jar not found at $paper_jar_path"
+            fi
+
+            # Move and rename the Folia jar
+            mv "$folia_jar_path" "$SERVER_DIR/folia-1.21.4.jar"
+            echo "Folia jar successfully moved and renamed to folia-1.21.4.jar."
 
             # Update start.sh to use the Folia jar
             echo "#!/bin/bash
