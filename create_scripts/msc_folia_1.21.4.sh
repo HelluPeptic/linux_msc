@@ -82,11 +82,21 @@ retry_build_folia() {
     return 1
 }
 
-# Update the build_folia function to use retry logic
+# Function to configure Git user identity
+configure_git_identity() {
+    echo "Configuring Git user identity..."
+    git config user.email "you@example.com"
+    git config user.name "Your Name"
+}
+
+# Update the build_folia function to configure Git identity before building
 build_folia() {
     echo "Cloning Folia repository..."
     git clone https://github.com/PaperMC/Folia.git folia_build
     cd folia_build || exit 1
+
+    # Configure Git user identity
+    configure_git_identity
 
     echo "Building Folia..."
     if ! retry_build_folia; then
