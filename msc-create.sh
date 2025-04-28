@@ -14,8 +14,6 @@ options=(
     3 "Fabric"
     4 "Forge"
     5 "Folia"
-    6 "Quit"
-    
 )
 
 choice=$(dialog --clear \
@@ -41,7 +39,6 @@ case $choice in
             2 "1.21.1"
             3 "1.20.4"
             4 "1.20.1"
-            5 "Quit"
         )
         ;;
     2) 
@@ -51,7 +48,6 @@ case $choice in
             2 "1.21.1"
             3 "1.20.4"
             4 "1.20.1"
-            5 "Quit"
         )
         ;;
     3) 
@@ -61,7 +57,6 @@ case $choice in
             2 "1.21.1"
             3 "1.20.4"
             4 "1.20.1"
-            5 "Quit"
         )
         ;;
     4) 
@@ -71,17 +66,14 @@ case $choice in
             2 "1.21.1"
             3 "1.20.4"
             4 "1.20.1"
-            5 "Quit"
         )
         ;;
     5) 
         server_type="folia"
         versions=(
             1 "1.21.4"
-            2 "Quit"
         )
         ;;
-    6) echo "Exiting..."; exit 0 ;;
 esac
 
 # Add a dialog warning message for Folia immediately after client selection
@@ -117,7 +109,6 @@ case $version_choice in
     2) server_version="1.21.1" ;;
     3) server_version="1.20.4" ;;
     4) server_version="1.20.1" ;;
-    5) echo "Exiting..."; exit 0 ;;
 esac
 
 # Prompt for server name
