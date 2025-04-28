@@ -75,39 +75,25 @@ build_folia() {
     # Check if the build was successful
     if [ $? -eq 0 ]; then
         echo "Folia build succeeded."
-        # Locate the Folia jar in the build output
-        folia_jar_path=$(find . -name "folia-*.jar" | head -n 1)
-        if [ -n "$folia_jar_path" ]; then
+        # Correct the Folia jar path and ensure the target directory exists
+        folia_jar_path="folia_build/build/libs/folia-bundler-1.21.4-R0.1-SNAPSHOT-mojmap.jar"
+        if [ -f "$folia_jar_path" ]; then
             echo "Folia jar found: $folia_jar_path"
+            mkdir -p "$SERVER_DIR"
             mv "$folia_jar_path" "$SERVER_DIR/$FOLIA_JAR"
-            replace_with_folia
+            echo "Folia jar successfully moved and renamed to $FOLIA_JAR."
+
+            # Update start.sh to use the Folia jar
+            echo "#!/bin/bash
+java -Xms1G -Xmx$RAM_ALLOCATION -jar $FOLIA_JAR nogui" > "$SERVER_DIR/start.sh"
+            chmod +x "$SERVER_DIR/start.sh"
+            echo "start.sh updated to use Folia jar."
         else
-            echo "Error: Folia jar not found in the build output."
+            echo "Error: Folia jar not found in the expected location."
             exit 1
         fi
     else
         echo "Folia build failed. Check the build logs for details."
-        exit 1
-    fi
-}
-
-# Function to replace Paper jar with Folia jar
-replace_with_folia() {
-    echo "Replacing Paper jar with Folia jar..."
-    local folia_jar="folia-1.21.4.jar"
-
-    # Locate the Folia jar in the build output
-    if [ -f "paper-server/build/libs/$folia_jar" ]; then
-        mv "paper-server/build/libs/$folia_jar" "$SERVER_DIR/$folia_jar"
-        rm "$SERVER_DIR/$FOLIA_JAR"
-
-        # Update start.sh to use the Folia jar
-        echo "#!/bin/bash
-        java -Xms1G -Xmx$RAM_ALLOCATION -jar $folia_jar nogui" > "$SERVER_DIR/start.sh"
-        chmod +x "$SERVER_DIR/start.sh"
-        echo "Folia jar successfully replaced and start.sh updated!"
-    else
-        echo "Error: Folia jar not found in the build output."
         exit 1
     fi
 }
@@ -121,14 +107,12 @@ if check_java_version; then
     echo "Java 21 is already installed."
     download_server
     build_folia
-    replace_with_folia
 else
     install_java_21
     if check_java_version; then
         echo "Java 21 installed successfully."
         download_server
         build_folia
-        replace_with_folia
     else
         echo "There was a problem installing Java 21."
         exit 1
