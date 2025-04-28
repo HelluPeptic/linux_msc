@@ -78,6 +78,19 @@ case $choice in
     6) echo "Exiting..."; exit 0 ;;
 esac
 
+# Add a dialog warning message for Folia immediately after client selection
+        if [ "$server_type" = "folia" ]; then
+            dialog --title "Warning" \
+                   --backtitle "Folia Selection" \
+                   --yesno "Folia is an experimental version of Paper, utilizing a complex threading model. Some plugins and datapacks may not function as expected. Additionally, the installation process may take longer than usual.\n\nDo you want to proceed?" 10 60
+
+            response=$?
+            if [ $response -eq 1 ]; then
+                # User selected 'No', return to client list
+                exec "$0"
+            fi
+        fi
+
 # Prompt for Minecraft version
 version_choice=$(dialog --clear \
                         --title "Choose a Minecraft Version" \
@@ -155,19 +168,6 @@ case $server_type in
         case $server_version in
             "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
         esac
-        # Add a dialog warning message for Folia
-        if [ "$server_type" = "folia" ]; then
-            dialog --title "Warning" \
-                   --backtitle "Folia Selection" \
-                   --yesno "Folia is an experimental version of Paper, utilizing a complex threading model. Some plugins and datapacks may not function as expected. Additionally, the installation process may take longer than usual.\n\nDo you want to proceed?" 10 60
-
-            response=$?
-            if [ $response -eq 1 ]; then
-                # User selected 'No', return to client list
-                exec "$0"
-            fi
-        fi
-        ;;
 esac
 
 if [[ $? -ne 0 ]]; then
