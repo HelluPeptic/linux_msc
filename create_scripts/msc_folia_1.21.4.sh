@@ -75,8 +75,8 @@ build_folia() {
     # Check if the build was successful
     if [ $? -eq 0 ]; then
         echo "Folia build succeeded."
-        # Correct the Folia jar path and ensure the target directory exists
-        folia_jar_path="folia_build/build/libs/folia-bundler-1.21.4-R0.1-SNAPSHOT-mojmap.jar"
+        # Dynamically locate the Folia jar in the build output directory
+        folia_jar_path=$(find folia_build/build/libs -name "folia-*.jar" | head -n 1)
         if [ -f "$folia_jar_path" ]; then
             echo "Folia jar found: $folia_jar_path"
             mkdir -p "$SERVER_DIR"
@@ -89,7 +89,7 @@ java -Xms1G -Xmx$RAM_ALLOCATION -jar $FOLIA_JAR nogui" > "$SERVER_DIR/start.sh"
             chmod +x "$SERVER_DIR/start.sh"
             echo "start.sh updated to use Folia jar."
         else
-            echo "Error: Folia jar not found in the expected location."
+            echo "Error: Folia jar not found in the build output directory."
             exit 1
         fi
     else
