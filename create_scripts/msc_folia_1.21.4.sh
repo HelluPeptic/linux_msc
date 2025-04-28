@@ -75,6 +75,10 @@ build_folia() {
     # Check if the build was successful
     if [ $? -eq 0 ]; then
         echo "Folia build succeeded."
+        # Debugging: Print the server directory and search path
+        echo "Debug: SERVER_DIR is set to $SERVER_DIR"
+        echo "Debug: Searching for Folia jar in $SERVER_DIR"
+
         # Dynamically search for the Folia jar within the created folder
         folia_jar_path=$(find "$SERVER_DIR" -name "folia-*.jar" | head -n 1)
         if [ -f "$folia_jar_path" ]; then
@@ -89,6 +93,8 @@ java -Xms1G -Xmx$RAM_ALLOCATION -jar $FOLIA_JAR nogui" > "$SERVER_DIR/start.sh"
             echo "start.sh updated to use Folia jar."
         else
             echo "Error: Folia jar not found in the created folder: $SERVER_DIR."
+            echo "Debug: Contents of $SERVER_DIR:"
+            ls -R "$SERVER_DIR"
             exit 1
         fi
     else
