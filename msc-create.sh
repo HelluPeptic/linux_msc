@@ -14,11 +14,12 @@ options=(
     3 "Fabric"
     4 "Forge"
     5 "Quit"
+    6 "Folia"
 )
 
 choice=$(dialog --clear \
                 --title "Choose a Minecraft Client" \
-                --menu "Select an option using the arrow keys, or press Enter:" 15 40 5 \
+                --menu "Select an option using the arrow keys, or press Enter:" 15 40 6 \
                 "${options[@]}" \
                 2>&1 >/dev/tty)
 
@@ -29,6 +30,7 @@ case $choice in
     2) server_type="paper" ;;
     3) server_type="fabric" ;;
     4) server_type="forge" ;;
+    6) server_type="folia" ;;
     5) echo "Exiting..."; exit 0 ;;
 esac
 
@@ -111,6 +113,11 @@ case $server_type in
             "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" ;;
             "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" ;;
             "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" ;;
+        esac
+        ;;
+    "folia")
+        case $server_version in
+            "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
         esac
         ;;
 esac
