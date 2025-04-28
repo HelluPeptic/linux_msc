@@ -79,7 +79,6 @@ esac
 # Add a dialog warning message for Folia immediately after client selection
         if [ "$server_type" = "folia" ]; then
             dialog --title "Warning" \
-                   --backtitle "Folia Selection" \
                    --yesno "Folia is an experimental version of Paper, utilizing a complex threading model. Some plugins and datapacks may not function as expected. Additionally, the installation process may take longer than usual.\n\nDo you want to proceed?" 10 60
 
             response=$?
@@ -137,39 +136,39 @@ fi
 case $server_type in
     "vanilla")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_vanilla_1.20.4.sh" "$server_dir" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_vanilla_1.20.1.sh" "$server_dir" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" clear ;;
+            "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" clear ;;
+            "1.20.4") bash "$create_scripts_dir/msc_vanilla_1.20.4.sh" "$server_dir" clear ;;
+            "1.20.1") bash "$create_scripts_dir/msc_vanilla_1.20.1.sh" "$server_dir" clear ;;
         esac
         ;;
     "paper")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_paper_1.20.4.sh" "$server_dir" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_paper_1.20.1.sh" "$server_dir" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" clear ;;
+            "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" clear ;;
+            "1.20.4") bash "$create_scripts_dir/msc_paper_1.20.4.sh" "$server_dir" clear ;;
+            "1.20.1") bash "$create_scripts_dir/msc_paper_1.20.1.sh" "$server_dir" clear ;;
         esac
         ;;
     "fabric")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_fabric_1.20.1.sh" "$server_dir" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" clear ;;
+            "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" clear ;;
+            "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" clear ;;
+            "1.20.1") bash "$create_scripts_dir/msc_fabric_1.20.1.sh" "$server_dir" clear ;;
         esac
         ;;
     "forge")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" clear ;;
+            "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" clear ;;
+            "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" clear ;;
+            "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" clear ;;
         esac
         ;;
     "folia")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" clear ;;
         esac
 esac
 
