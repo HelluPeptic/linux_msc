@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Ensure Git user identity is configured globally at the start of the script
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+
 # Get the server directory name from the first argument
 SERVER_DIR="$1"
 PAPER_VERSION="1.21.4"
@@ -82,21 +86,11 @@ retry_build_folia() {
     return 1
 }
 
-# Function to configure Git user identity
-configure_git_identity() {
-    echo "Configuring Git user identity..."
-    git config user.email "you@example.com"
-    git config user.name "Your Name"
-}
-
 # Update the build_folia function to configure Git identity before building
 build_folia() {
     echo "Cloning Folia repository..."
     git clone https://github.com/PaperMC/Folia.git folia_build
     cd folia_build || exit 1
-
-    # Configure Git user identity
-    configure_git_identity
 
     echo "Building Folia..."
     if ! retry_build_folia; then
