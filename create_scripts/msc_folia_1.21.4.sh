@@ -59,15 +59,39 @@ download_server() {
     echo "Folia server setup complete!"
 }
 
-# Function to build Folia
+# Function to retry the Folia build process
+retry_build_folia() {
+    local retries=3
+    local count=0
+
+    while [ $count -lt $retries ]; do
+        echo "Attempting to build Folia (Attempt $((count + 1)) of $retries)..."
+        ./gradlew applyPatches && ./gradlew createMojmapBundlerJar
+
+        if [ $? -eq 0 ]; then
+            echo "Folia build succeeded on attempt $((count + 1))."
+            return 0
+        fi
+
+        echo "Folia build failed. Retrying..."
+        count=$((count + 1))
+        sleep 5  # Wait before retrying
+    done
+
+    echo "Folia build failed after $retries attempts. Check the build logs for details."
+    return 1
+}
+
+# Update the build_folia function to use retry logic
 build_folia() {
     echo "Cloning Folia repository..."
     git clone https://github.com/PaperMC/Folia.git folia_build
     cd folia_build || exit 1
 
     echo "Building Folia..."
-    ./gradlew applyPatches
-    ./gradlew createMojmapBundlerJar
+    if ! retry_build_folia; then
+        exit 1
+    fi
 
     if [ -d "paper-server/build/libs" ]; then
         echo "Folia build complete! The output is located in paper-server/build/libs."
