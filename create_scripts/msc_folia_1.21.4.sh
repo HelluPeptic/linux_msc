@@ -49,7 +49,7 @@ download_server() {
     mkdir -p "$SERVER_DIR"
     cd "$SERVER_DIR" || exit 1
 
-    echo "Downloading Folia server version $PAPER_VERSION..."
+    echo "Downloading Paper server version $PAPER_VERSION..."
     curl -o "$PAPER_JAR" "$PAPER_API_URL"
     if [ ! -f "$PAPER_JAR" ]; then
         echo "Download failed. Check the version and build number and try again."
@@ -75,13 +75,13 @@ build_folia() {
     # Check if the build was successful
     if [ $? -eq 0 ]; then
         echo "Folia build succeeded."
-    else
-        echo "Folia build failed. Check the build logs for details."
-        exit 1
-    fi
-
-    if [ -d "paper-server/build/libs" ]; then
-        echo "Folia build complete! The output is located in paper-server/build/libs."
+        if [ -d "paper-server/build/libs" ]; then
+            echo "Proceeding to replace Paper with Folia."
+            replace_with_folia
+        else
+            echo "Error: Build output directory not found."
+            exit 1
+        fi
     else
         echo "Folia build failed. Check the build logs for details."
         exit 1
