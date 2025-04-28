@@ -106,6 +106,12 @@ version_choice=$(dialog --clear \
 
 clear
 
+# Handle the case where the user presses 'Cancel' in the version selection dialog
+if [ -z "$version_choice" ]; then
+    echo "Exiting..."
+    exit 0
+fi
+
 case $version_choice in
     1) server_version="1.21.4" ;;
     2) server_version="1.21.1" ;;
