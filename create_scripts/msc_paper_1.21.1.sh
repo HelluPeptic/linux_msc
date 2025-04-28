@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# Get the server directory name from the first argument
-SERVER_DIR="$1"
 PAPER_VERSION="1.21.1"
 PAPER_API_URL="https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION/builds/131/downloads/paper-1.21.1-131.jar"
 PAPER_JAR="paper-$PAPER_VERSION.jar"
-RAM_ALLOCATION="6G"
+
+# Accept the custom server directory name and RAM allocation as parameters
+server_dir="$1"
+ram_allocation="$2"
 
 # Ensure a server directory name is provided
 if [ -z "$SERVER_DIR" ]; then
@@ -70,7 +71,8 @@ download_server() {
 
     echo "eula=true" > eula.txt
     echo "#!/bin/bash
-    java -Xms1G -Xmx$RAM_ALLOCATION -jar $PAPER_JAR nogui" > start.sh
+java -Xms1024M -Xmx$ram_allocation -jar $PAPER_JAR nogui" > start.sh
+
     chmod +x start.sh
     echo "Server setup complete! Navigate to '$SERVER_DIR' and run './start.sh' to start the server."
 }

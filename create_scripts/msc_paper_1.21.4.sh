@@ -1,14 +1,15 @@
 #!/bin/bash
 
-# Get the server directory name from the first argument
-SERVER_DIR="$1"
 PAPER_VERSION="1.21.4"
 PAPER_API_URL="https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION/builds/66/downloads/paper-1.21.4-66.jar"
 PAPER_JAR="paper-$PAPER_VERSION.jar"
-RAM_ALLOCATION="6G"
+
+# Accept the custom server directory name and RAM allocation as parameters
+server_dir="$1"
+ram_allocation="$2"
 
 # Ensure a server directory name is provided
-if [ -z "$SERVER_DIR" ]; then
+if [ -z "$server_dir" ]; then
     echo "Error: You must specify a server directory name as the first argument."
     echo "Usage: $0 <server_directory_name>"
     exit 1
@@ -60,8 +61,8 @@ install_java_21() {
 
 # Function to download the Minecraft server .jar file
 download_server() {
-    mkdir -p "$SERVER_DIR"
-    cd "$SERVER_DIR" || exit 1
+    mkdir -p "$server_dir"
+    cd "$server_dir" || exit 1
 
     echo "Downloading Paper server version $PAPER_VERSION..."
     curl -o "$PAPER_JAR" "$PAPER_API_URL"
@@ -72,9 +73,10 @@ download_server() {
 
     echo "eula=true" > eula.txt
     echo "#!/bin/bash
-    java -Xms1G -Xmx$RAM_ALLOCATION -jar $PAPER_JAR nogui" > start.sh
+java -Xms1024M -Xmx$ram_allocation -jar $PAPER_JAR nogui" > start.sh
     chmod +x start.sh
-    echo "Server setup complete! Navigate to '$SERVER_DIR' and run './start.sh' to start the server."
+
+    echo "Server setup complete! Navigate to '$server_dir' and run './start.sh' to start the server."
 }
 
 # Main script flow
@@ -86,7 +88,7 @@ if check_java_version; then
     echo "Java 21 is already installed."
     download_server
 else
-    install_java21
+    install_java_21
     if check_java_version; then
         echo "Java 21 installed successfully."
         download_server

@@ -4,10 +4,10 @@ SERVER_DIR="vanilla_1.21.1"
 MINECRAFT_VERSION="1.21.1"
 MINECRAFT_SERVER_JAR="server.jar"
 MINECRAFT_DOWNLOAD_URL="https://piston-data.mojang.com/v1/objects/450698d1863ab5180c25d7c804ef0fe6369dd1ba/server.jar"
-RAM_ALLOCATION="6G"
 
-# Accept the custom server directory name as a parameter
+# Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
+ram_allocation="$2"
 
 # Check if the directory name was provided
 if [[ -z "$server_dir" ]]; then
@@ -21,7 +21,7 @@ mkdir -p "$server_dir"
 # Create the startup script in the server directory
 cat <<EOF > "$server_dir/start.sh"
 #!/bin/bash
-java -Xmx$RAM_ALLOCATION -Xms1024M -jar vanilla_$MINECRAFT_VERSION.jar nogui
+java -Xmx$ram_allocation -Xms1024M -jar vanilla_$MINECRAFT_VERSION.jar nogui
 EOF
 chmod +x "$server_dir/start.sh"
 
@@ -95,7 +95,7 @@ download_server() {
 
     # Create a start script
     echo "#!/bin/bash
-java -Xms1G -Xmx$RAM_ALLOCATION -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
+java -Xms1G -Xmx$ram_allocation -jar $MINECRAFT_SERVER_JAR nogui" > start.sh
 
     chmod +x start.sh
     echo "Server is ready! To start the server, navigate to '$server_dir' and run: 'bash start.sh'."

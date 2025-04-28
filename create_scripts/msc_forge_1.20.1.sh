@@ -5,8 +5,9 @@ FORGE_INSTALLER_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/1
 FORGE_INSTALLER_JAR="forge-installer.jar"
 FORGE_UNIVERSAL_JAR="java @user_jvm_args.txt @libraries/net/minecraftforge/forge/1.20.1-47.3.0/unix_args.txt "$@""
 
-# Accept the custom server directory name as a parameter
+# Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
+ram_allocation="$2"
 
 # Check if the directory name was provided
 if [[ -z "$server_dir" ]]; then
@@ -60,6 +61,10 @@ download_forge_server() {
 
     # Accept the EULA
     echo "eula=true" > eula.txt
+
+    # Configure JVM arguments with specified RAM allocation
+    echo "-Xms1024M" > user_jvm_args.txt
+    echo "-Xmx$ram_allocation" >> user_jvm_args.txt
 
     # Create a start script
     echo "java @user_jvm_args.txt @libraries/net/minecraftforge/forge/1.20.1-47.3.0/unix_args.txt "$@"" > start.sh
