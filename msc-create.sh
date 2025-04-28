@@ -79,7 +79,7 @@ esac
 # Add a dialog warning message for Folia immediately after client selection
         if [ "$server_type" = "folia" ]; then
             dialog --title "Warning" \
-                   --yesno "Folia is an experimental version of Paper, utilizing a complex threading model. Some plugins and datapacks may not function as expected. Additionally, the installation process may take longer than usual.\n\nDo you want to proceed?" 10 60
+                   --yesno "Folia is an experimental version of Paper, utilizing a complex threading model to enhance performance on servers with large playerbases. Some plugins and datapacks may not function as expected. Additionally, the installation process may take longer than usual.\n\nDo you want to proceed?" 10 60
 
             response=$?
             if [ $response -eq 1 ]; then
