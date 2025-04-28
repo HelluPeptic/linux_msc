@@ -8,7 +8,7 @@ git config --global user.name "Your Name"
 SERVER_DIR="$1"
 PAPER_VERSION="1.21.4"
 PAPER_API_URL="https://api.papermc.io/v2/projects/paper/versions/$PAPER_VERSION/builds/66/downloads/paper-1.21.4-66.jar"
-PAPER_JAR="paper-$PAPER_VERSION.jar"
+FOLIA_JAR="folia-1.21.4.jar"
 RAM_ALLOCATION="6G"
 
 # Ensure a server directory name is provided
@@ -50,15 +50,15 @@ download_server() {
     cd "$SERVER_DIR" || exit 1
 
     echo "Downloading Paper server version $PAPER_VERSION..."
-    curl -o "$PAPER_JAR" "$PAPER_API_URL"
-    if [ ! -f "$PAPER_JAR" ]; then
+    curl -o "$FOLIA_JAR" "$PAPER_API_URL"
+    if [ ! -f "$FOLIA_JAR" ]; then
         echo "Download failed. Check the version and build number and try again."
         exit 1
     fi
 
     echo "eula=true" > eula.txt
     echo "#!/bin/bash
-    java -Xms1G -Xmx$RAM_ALLOCATION -jar $PAPER_JAR nogui" > start.sh
+    java -Xms1G -Xmx$RAM_ALLOCATION -jar $FOLIA_JAR nogui" > start.sh
     chmod +x start.sh
     echo "Folia server setup complete!"
 }
@@ -75,11 +75,14 @@ build_folia() {
     # Check if the build was successful
     if [ $? -eq 0 ]; then
         echo "Folia build succeeded."
-        if [ -d "paper-server/build/libs" ]; then
-            echo "Proceeding to replace Paper with Folia."
+        # Locate the Folia jar in the build output
+        folia_jar_path=$(find . -name "folia-*.jar" | head -n 1)
+        if [ -n "$folia_jar_path" ]; then
+            echo "Folia jar found: $folia_jar_path"
+            mv "$folia_jar_path" "$SERVER_DIR/$FOLIA_JAR"
             replace_with_folia
         else
-            echo "Error: Build output directory not found."
+            echo "Error: Folia jar not found in the build output."
             exit 1
         fi
     else
@@ -96,7 +99,7 @@ replace_with_folia() {
     # Locate the Folia jar in the build output
     if [ -f "paper-server/build/libs/$folia_jar" ]; then
         mv "paper-server/build/libs/$folia_jar" "$SERVER_DIR/$folia_jar"
-        rm "$SERVER_DIR/$PAPER_JAR"
+        rm "$SERVER_DIR/$FOLIA_JAR"
 
         # Update start.sh to use the Folia jar
         echo "#!/bin/bash

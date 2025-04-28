@@ -132,43 +132,46 @@ if [[ ! -d "$create_scripts_dir" ]]; then
     exit 1
 fi
 
+# Clear the screen before running the create script
+clear
+
 # Execute the specific creation script based on server type and version
 case $server_type in
     "vanilla")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" clear ;;
-            "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" clear ;;
-            "1.20.4") bash "$create_scripts_dir/msc_vanilla_1.20.4.sh" "$server_dir" clear ;;
-            "1.20.1") bash "$create_scripts_dir/msc_vanilla_1.20.1.sh" "$server_dir" clear ;;
+            "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_vanilla_1.20.4.sh" "$server_dir" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_vanilla_1.20.1.sh" "$server_dir" ;;
         esac
         ;;
     "paper")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" clear ;;
-            "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" clear ;;
-            "1.20.4") bash "$create_scripts_dir/msc_paper_1.20.4.sh" "$server_dir" clear ;;
-            "1.20.1") bash "$create_scripts_dir/msc_paper_1.20.1.sh" "$server_dir" clear ;;
+            "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_paper_1.20.4.sh" "$server_dir" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_paper_1.20.1.sh" "$server_dir" ;;
         esac
         ;;
     "fabric")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" clear ;;
-            "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" clear ;;
-            "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" clear ;;
-            "1.20.1") bash "$create_scripts_dir/msc_fabric_1.20.1.sh" "$server_dir" clear ;;
+            "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_fabric_1.20.1.sh" "$server_dir" ;;
         esac
         ;;
     "forge")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" clear ;;
-            "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" clear ;;
-            "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" clear ;;
-            "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" clear ;;
+            "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_forge_1.20.4.sh" "$server_dir" ;;
+            "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" ;;
         esac
         ;;
     "folia")
         case $server_version in
-            "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" clear ;;
+            "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
         esac
 esac
 
