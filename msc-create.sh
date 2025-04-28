@@ -13,8 +13,9 @@ options=(
     2 "Paper"
     3 "Fabric"
     4 "Forge"
-    5 "Quit"
-    6 "Folia"
+    5 "Folia"
+    6 "Quit"
+    
 )
 
 choice=$(dialog --clear \
@@ -30,8 +31,8 @@ case $choice in
     2) server_type="paper" ;;
     3) server_type="fabric" ;;
     4) server_type="forge" ;;
-    6) server_type="folia" ;;
-    5) echo "Exiting..."; exit 0 ;;
+    5) server_type="folia" ;;
+    6) echo "Exiting..."; exit 0 ;;
 esac
 
 # Prompt for Minecraft version
