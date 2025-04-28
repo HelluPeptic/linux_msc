@@ -45,7 +45,7 @@ download_server() {
     mkdir -p "$SERVER_DIR"
     cd "$SERVER_DIR" || exit 1
 
-    echo "Downloading Paper server version $PAPER_VERSION..."
+    echo "Downloading Folia server version $PAPER_VERSION..."
     curl -o "$PAPER_JAR" "$PAPER_API_URL"
     if [ ! -f "$PAPER_JAR" ]; then
         echo "Download failed. Check the version and build number and try again."
@@ -56,7 +56,7 @@ download_server() {
     echo "#!/bin/bash
     java -Xms1G -Xmx$RAM_ALLOCATION -jar $PAPER_JAR nogui" > start.sh
     chmod +x start.sh
-    echo "Paper server setup complete!"
+    echo "Folia server setup complete!"
 }
 
 # Function to build Folia
