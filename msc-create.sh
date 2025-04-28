@@ -26,6 +26,12 @@ choice=$(dialog --clear \
 
 clear
 
+# Handle the case where the user presses 'Cancel' in the client selection dialog
+if [ -z "$choice" ]; then
+    echo "Exiting..."
+    exit 0
+fi
+
 # Update the version selection menu to show only supported versions for each server type
 case $choice in
     1) 
