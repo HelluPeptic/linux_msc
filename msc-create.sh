@@ -26,27 +26,62 @@ choice=$(dialog --clear \
 
 clear
 
+# Update the version selection menu to show only supported versions for each server type
 case $choice in
-    1) server_type="vanilla" ;;
-    2) server_type="paper" ;;
-    3) server_type="fabric" ;;
-    4) server_type="forge" ;;
-    5) server_type="folia" ;;
+    1) 
+        server_type="vanilla"
+        versions=(
+            1 "1.21.4"
+            2 "1.21.1"
+            3 "1.20.4"
+            4 "1.20.1"
+            5 "Quit"
+        )
+        ;;
+    2) 
+        server_type="paper"
+        versions=(
+            1 "1.21.4"
+            2 "1.21.1"
+            3 "1.20.4"
+            4 "1.20.1"
+            5 "Quit"
+        )
+        ;;
+    3) 
+        server_type="fabric"
+        versions=(
+            1 "1.21.4"
+            2 "1.21.1"
+            3 "1.20.4"
+            4 "1.20.1"
+            5 "Quit"
+        )
+        ;;
+    4) 
+        server_type="forge"
+        versions=(
+            1 "1.21.4"
+            2 "1.21.1"
+            3 "1.20.4"
+            4 "1.20.1"
+            5 "Quit"
+        )
+        ;;
+    5) 
+        server_type="folia"
+        versions=(
+            1 "1.21.4"
+            2 "Quit"
+        )
+        ;;
     6) echo "Exiting..."; exit 0 ;;
 esac
 
 # Prompt for Minecraft version
-versions=(
-    1 "1.21.4"
-    2 "1.21.1"
-    3 "1.20.4"
-    4 "1.20.1"
-    5 "Quit"
-)
-
 version_choice=$(dialog --clear \
                         --title "Choose a Minecraft Version" \
-                        --menu "Select an option using the arrow keys, or press Enter:" 15 40 4 \
+                        --menu "Select an option using the arrow keys, or press Enter:" 15 40 ${#versions[@]} \
                         "${versions[@]}" \
                         2>&1 >/dev/tty)
 
