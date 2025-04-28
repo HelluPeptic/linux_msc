@@ -79,21 +79,14 @@ build_folia() {
         echo "Debug: SERVER_DIR is set to $SERVER_DIR"
         echo "Debug: Searching for Folia jar in $SERVER_DIR"
 
-        # Debugging: Print the current working directory
-        echo "Debug: Current working directory is $(pwd)"
+        # Ensure we are in the correct directory before searching for the Folia jar
+        cd "$SERVER_DIR" || { echo "Error: Failed to navigate to SERVER_DIR: $SERVER_DIR"; exit 1; }
 
-        # Ensure the SERVER_DIR exists
-        if [ ! -d "$SERVER_DIR" ]; then
-            echo "Error: SERVER_DIR does not exist: $SERVER_DIR"
-            exit 1
-        fi
-
-        # Debugging: Print the contents of SERVER_DIR before searching
-        echo "Debug: Contents of SERVER_DIR before searching:"
-        ls -R "$SERVER_DIR"
+        # Debugging: Confirm the current working directory
+        echo "Debug: Current working directory after navigating to SERVER_DIR is $(pwd)"
 
         # Dynamically search for the Folia jar within the created folder
-        folia_jar_path=$(find "$SERVER_DIR" -name "folia-*.jar" | head -n 1)
+        folia_jar_path=$(find . -name "folia-*.jar" | head -n 1)
         if [ -f "$folia_jar_path" ]; then
             echo "Folia jar found: $folia_jar_path"
             mv "$folia_jar_path" "$SERVER_DIR/$FOLIA_JAR"
