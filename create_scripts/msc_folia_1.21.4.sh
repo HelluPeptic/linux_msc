@@ -46,8 +46,20 @@ install_java_21() {
 
 # Function to download the Minecraft server .jar file
 download_server() {
+    # Ensure SERVER_DIR is an absolute path
+    SERVER_DIR="$(realpath "$SERVER_DIR")"
+
+    # Debugging: Print the absolute path of SERVER_DIR
+    echo "Debug: Absolute path of SERVER_DIR is $SERVER_DIR"
+
+    # Ensure the SERVER_DIR exists
     mkdir -p "$SERVER_DIR"
-    cd "$SERVER_DIR" || exit 1
+
+    # Navigate to SERVER_DIR
+    cd "$SERVER_DIR" || { echo "Error: Failed to navigate to SERVER_DIR: $SERVER_DIR"; exit 1; }
+
+    # Debugging: Confirm the current working directory after navigating to SERVER_DIR
+    echo "Debug: Current working directory after navigating to SERVER_DIR is $(pwd)"
 
     echo "Downloading Paper server version $PAPER_VERSION..."
     curl -o "$FOLIA_JAR" "$PAPER_API_URL"
