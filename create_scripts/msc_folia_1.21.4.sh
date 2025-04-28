@@ -63,29 +63,6 @@ download_server() {
     echo "Folia server setup complete!"
 }
 
-# Function to retry the Folia build process
-retry_build_folia() {
-    local retries=3
-    local count=0
-
-    while [ $count -lt $retries ]; do
-        echo "Attempting to build Folia (Attempt $((count + 1)) of $retries)..."
-        ./gradlew applyPatches && ./gradlew createMojmapBundlerJar
-
-        if [ $? -eq 0 ]; then
-            echo "Folia build succeeded on attempt $((count + 1))."
-            return 0
-        fi
-
-        echo "Folia build failed. Retrying..."
-        count=$((count + 1))
-        sleep 5  # Wait before retrying
-    done
-
-    echo "Folia build failed after $retries attempts. Check the build logs for details."
-    return 1
-}
-
 # Update the build_folia function to configure Git identity before building
 build_folia() {
     echo "Cloning Folia repository..."
@@ -93,7 +70,13 @@ build_folia() {
     cd folia_build || exit 1
 
     echo "Building Folia..."
-    if ! retry_build_folia; then
+    ./gradlew applyPatches && ./gradlew createMojmapBundlerJar
+
+    # Check if the build was successful
+    if [ $? -eq 0 ]; then
+        echo "Folia build succeeded."
+    else
+        echo "Folia build failed. Check the build logs for details."
         exit 1
     fi
 
