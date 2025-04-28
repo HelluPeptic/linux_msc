@@ -41,48 +41,101 @@ options=(
     2 "Paper"
     3 "Fabric"
     4 "Forge"
-    5 "Quit"
+    5 "Folia"
 )
 
 choice=$(dialog --clear \
                 --title "Choose a Minecraft Client" \
-                --menu "Select an option using the arrow keys, or press Enter:" 15 40 5 \
+                --menu "Select an option using the arrow keys, or press Enter:" 15 40 6 \
                 "${options[@]}" \
                 2>&1 >/dev/tty)
 
 clear
 
+# Handle the case where the user presses 'Cancel' in the client selection dialog
+if [ -z "$choice" ]; then
+    echo "Exiting..."
+    exit 0
+fi
+
+# Update the version selection menu to show only supported versions for each server type
 case $choice in
-    1) server_type="vanilla" ;;
-    2) server_type="paper" ;;
-    3) server_type="fabric" ;;
-    4) server_type="forge" ;;
-    5) echo "Exiting..."; exit 0 ;;
+    1) 
+        server_type="vanilla"
+        versions=(
+            1 "1.21.4"
+            2 "1.21.1"
+            3 "1.20.4"
+            4 "1.20.1"
+        )
+        ;;
+    2) 
+        server_type="paper"
+        versions=(
+            1 "1.21.4"
+            2 "1.21.1"
+            3 "1.20.4"
+            4 "1.20.1"
+        )
+        ;;
+    3) 
+        server_type="fabric"
+        versions=(
+            1 "1.21.4"
+            2 "1.21.1"
+            3 "1.20.4"
+            4 "1.20.1"
+        )
+        ;;
+    4) 
+        server_type="forge"
+        versions=(
+            1 "1.21.4"
+            2 "1.21.1"
+            3 "1.20.4"
+            4 "1.20.1"
+        )
+        ;;
+    5) 
+        server_type="folia"
+        versions=(
+            1 "1.21.4"
+        )
+        ;;
 esac
 
-# Prompt for Minecraft version
-versions=(
-    1 "1.21.4"
-    2 "1.21.1"
-    3 "1.20.4"
-    4 "1.20.1"
-    5 "Quit"
-)
+# Add a dialog warning message for Folia immediately after client selection
+        if [ "$server_type" = "folia" ]; then
+            dialog --title "Warning" \
+                   --yesno "Folia is an experimental version of Paper, utilizing a complex threading model to enhance performance on servers with large playerbases. Some plugins and datapacks may not function as expected. Additionally, the installation process may take longer than usual.\n\nDo you want to proceed?" 11 60
 
+            response=$?
+            if [ $response -eq 1 ]; then
+                # User selected 'No', return to client list
+                exec "$0"
+            fi
+        fi
+
+# Prompt for Minecraft version
 version_choice=$(dialog --clear \
                         --title "Choose a Minecraft Version" \
-                        --menu "Select an option using the arrow keys, or press Enter:" 15 40 4 \
+                        --menu "Select an option using the arrow keys, or press Enter:" 15 40 ${#versions[@]} \
                         "${versions[@]}" \
                         2>&1 >/dev/tty)
 
 clear
+
+# Handle the case where the user presses 'Cancel' in the version selection dialog
+if [ -z "$version_choice" ]; then
+    echo "Exiting..."
+    exit 0
+fi
 
 case $version_choice in
     1) server_version="1.21.4" ;;
     2) server_version="1.21.1" ;;
     3) server_version="1.20.4" ;;
     4) server_version="1.20.1" ;;
-    5) echo "Exiting..."; exit 0 ;;
 esac
 
 # Prompt for RAM allocation
@@ -114,6 +167,9 @@ if [[ ! -d "$create_scripts_dir" ]]; then
     echo "Error: create_scripts directory not found at $create_scripts_dir."
     exit 1
 fi
+
+# Clear the screen before running the create script
+clear
 
 # Execute the specific creation script based on server type and version
 case $server_type in
@@ -149,6 +205,10 @@ case $server_type in
             "1.20.1") bash "$create_scripts_dir/msc_forge_1.20.1.sh" "$server_dir" "$server_ram" ;;
         esac
         ;;
+    "folia")
+        case $server_version in
+            "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
+        esac
 esac
 
 if [[ $? -ne 0 ]]; then
