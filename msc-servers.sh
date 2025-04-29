@@ -133,7 +133,7 @@ kill_server() {
 # Fix loading screen progress for backup creation
 create_backup() {
     local server_name="$1"
-    local backup_dir="backups/$server_name"
+    local backup_dir="$server_name/backups"
     echo "[DEBUG] Creating backup directory: $backup_dir" >&2
     mkdir -p "$backup_dir"  # Ensure the backups directory is created
 
