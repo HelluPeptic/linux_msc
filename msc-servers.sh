@@ -130,15 +130,12 @@ kill_server() {
     fi
 }
 
-# Fix loading screen progress for backup creation
 create_backup() {
     local server_name="$1"
     local backup_dir="$server_name/backups"
-    echo "[DEBUG] Creating backup directory: $backup_dir" >&2
     mkdir -p "$backup_dir"  # Ensure the backups directory is created
 
     local backup_name=$(dialog --inputbox "Choose a name for the backup:" 10 50 3>&1 1>&2 2>&3)
-    echo "[DEBUG] User entered backup name: $backup_name" >&2
     if [ -z "$backup_name" ]; then
         dialog --msgbox "Backup creation canceled." 10 50
         return
@@ -146,7 +143,6 @@ create_backup() {
 
     local timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
     local backup_path="$backup_dir/${backup_name}_$timestamp.tar.gz"
-    echo "[DEBUG] Backup path: $backup_path" >&2
 
     ( # Background process to simulate progress
         for i in {1..100}; do
@@ -155,49 +151,38 @@ create_backup() {
         done
     ) | dialog --title "Creating Backup" --gauge "Backing up $server_name..." 10 50
 
-    echo "[DEBUG] Starting tar process to create backup." >&2
     tar -czf "$backup_path" "$server_name"
 
     if [ -f "$backup_path" ]; then
-        echo "[DEBUG] Backup created successfully: $backup_path" >&2
         dialog --msgbox "Backup created successfully: $backup_path" 10 50
     else
-        echo "[DEBUG] Backup creation failed." >&2
         dialog --msgbox "Backup creation failed." 10 50
     fi
 }
 
-# Fix duplicate backups in the list and preserve date when renaming
 view_backups() {
     local server_name="$1"
     local backup_dir="$server_name/backups"
-    echo "[DEBUG] Viewing backups in directory: $backup_dir" >&2
 
     if [ ! -d "$backup_dir" ]; then
-        echo "[DEBUG] Backup directory does not exist." >&2
         dialog --msgbox "No backups found for $server_name." 10 50
         return
     fi
 
-    # Create a map between pretty names and actual filenames
-    local -A backup_map=()
+    # Use find to list only valid backup files and format them for display exactly as requested
+    local backups=( $(find "$backup_dir" -type f -name "*.tar.gz" -exec basename {} \; | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2}).tar.gz/\1 | \2 \3:\4:\5/' | sort -u) )
+
+    # Prepare the menu items from the formatted backups
     local menu_items=()
+    for backup in "${backups[@]}"; do
+        menu_items+=("$backup" "")
+    done
 
-    while IFS= read -r file; do
-        base_name="${file%.tar.gz}"
-        pretty_name=$(echo "$base_name" | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2})/\1 | \2 \3:\4:\5/')
-        backup_map["$pretty_name"]="$file"
-        menu_items+=("$pretty_name" "")
-    done < <(find "$backup_dir" -type f -name "*.tar.gz" -exec basename {} \; | sort -u)
+    local backup_choice=$(dialog --menu "Select a backup:" 25 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
 
-    if [ ${#menu_items[@]} -eq 0 ]; then
-        dialog --msgbox "No backups found for $server_name." 10 50
+    if [ -z "$backup_choice" ]; then
         return
     fi
-
-    local backup_choice=$(dialog --menu "Select a backup:" 10 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
-    echo "[DEBUG] User selected backup: $backup_choice" >&2
-    [ -z "$backup_choice" ] && return
 
     local actual_file="${backup_map[$backup_choice]}"
     local backup_path="$backup_dir/$actual_file"
@@ -206,17 +191,14 @@ view_backups() {
         "1" "Restore to this backup" \
         "2" "Rename this backup" \
         "3" "Delete this backup" 3>&1 1>&2 2>&3)
-    echo "[DEBUG] User selected action: $action" >&2
 
     case $action in
         1)
-            echo "[DEBUG] Restoring backup: $backup_path" >&2
             tar -xzf "$backup_path" -C .
             dialog --msgbox "Backup restored successfully." 10 50
             ;;
         2)
             local new_name=$(dialog --inputbox "Enter a new name for the backup (date will be preserved):" 10 50 3>&1 1>&2 2>&3)
-            echo "[DEBUG] User entered new name: $new_name" >&2
             if [ -n "$new_name" ]; then
                 local timestamp=$(echo "$actual_file" | sed -E 's/.*_([0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2})\.tar\.gz/\1/')
                 local new_file="${new_name}_${timestamp}.tar.gz"
@@ -232,9 +214,7 @@ view_backups() {
 }
 
 
-# Add debugging to track menu selection and flow
 while true; do
-    echo "[DEBUG] Fetching server directories..." >&2
     server_dirs=()
     for dir in */; do
         if [ -f "$dir/start.sh" ]; then
@@ -242,23 +222,18 @@ while true; do
         fi
     done
 
-    echo "[DEBUG] Found server directories: ${server_dirs[@]}" >&2
-
     if [ ${#server_dirs[@]} -eq 0 ]; then
         dialog --title "No Servers Found" --msgbox "No Minecraft servers with a start.sh file found in the current directory." 10 50
-        echo "[DEBUG] No servers found. Exiting." >&2
         clear
         exit 0
     fi
 
-    echo "[DEBUG] Sorting servers by status..." >&2
     sorted_server_dirs=()
     running_servers=()
     not_running_servers=()
 
     for server in "${server_dirs[@]}"; do
         status=$(is_server_running "$server")
-        echo "[DEBUG] Server: $server, Status: $status" >&2
         if [ "$status" == "Running" ]; then
             running_servers+=("$server")
         else
@@ -268,20 +243,15 @@ while true; do
 
     sorted_server_dirs=("${running_servers[@]}" "${not_running_servers[@]}")
 
-    echo "[DEBUG] Sorted servers: ${sorted_server_dirs[@]}" >&2
-
     menu_items=()
     for server in "${sorted_server_dirs[@]}"; do
         status=$(is_server_running "$server")
         menu_items+=("$server" "$status")
     done
 
-    echo "[DEBUG] Building menu items: ${menu_items[@]}" >&2
-
     selected_server=$(dialog --menu "Select a server:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
 
     if [ -z "$selected_server" ]; then
-        echo "[DEBUG] No server selected. Exiting." >&2
         clear
         exit 0
     fi
@@ -290,7 +260,6 @@ while true; do
 
     full_server_name="$selected_server"
     status=$(is_server_running "$full_server_name")
-    echo "[DEBUG] Status of selected server: $status" >&2
 
     if [ "$status" == "Running" ]; then
         action=$(dialog --menu "Manage $full_server_name (Running):" 15 50 10 \
@@ -299,7 +268,7 @@ while true; do
             "3" "Kill Server" \
             "4" "Exit Menu" 3>&1 1>&2 2>&3)
 
-        echo "[DEBUG] Selected action for running server: $action" >&2
+
 
         case $action in
             1) view_console "$full_server_name" ;;
@@ -309,7 +278,6 @@ while true; do
         esac
     elif [ "$status" == "Shutting Down" ]; then
         dialog --msgbox "The server $full_server_name is currently shutting down. Please wait." 10 50
-        echo "[DEBUG] Server is shutting down." >&2
     else
         action=$(dialog --menu "Manage $full_server_name (Not Running):" 15 50 10 \
             "1" "Start Server" \
@@ -318,7 +286,6 @@ while true; do
             "4" "Delete Server" \
             "5" "Exit Menu" 3>&1 1>&2 2>&3)
 
-        echo "[DEBUG] Selected action for not running server: $action" >&2
 
         case $action in
             1) start_server "$full_server_name" ;;
@@ -328,7 +295,6 @@ while true; do
                     "1" "Create a new backup" \
                     "2" "View backups" 3>&1 1>&2 2>&3)
 
-                echo "[DEBUG] Selected backup action: $backup_action" >&2
 
                 case $backup_action in
                     1) create_backup "$full_server_name" ;;
