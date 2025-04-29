@@ -188,8 +188,8 @@ view_backups() {
         return
     fi
 
-    # Extract just the filenames for the dialog menu
-    local backup_choices=( $(basename -a "${backups[@]}") )
+    # Extract just the filenames for the dialog menu and ensure uniqueness
+    local backup_choices=( $(basename -a "${backups[@]}" | sort -u) )
 
     local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 $(for backup in "${backup_choices[@]}"; do echo "$backup" "$backup"; done) 3>&1 1>&2 2>&3)
     echo "[DEBUG] User selected backup: $backup_choice" >&2
