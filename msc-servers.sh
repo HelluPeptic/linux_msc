@@ -181,15 +181,14 @@ view_backups() {
 
     # Use find to list only valid backup files and ensure uniqueness
     local backups=( $(find "$backup_dir" -type f -name "*.tar.gz" | sort -u) )
-    echo "[DEBUG] Found backups: ${backups[@]}" >&2
-
-    if [ ${#backups[@]} -eq 0 ]; then
-        dialog --msgbox "No backups found for $server_name." 10 50
-        return
-    fi
+    # Debugging: Log the raw list of backups before processing
+    echo "[DEBUG] Raw backups list: ${backups[@]}" >&2
 
     # Extract just the filenames for the dialog menu and ensure uniqueness
     local backup_choices=( $(basename -a "${backups[@]}" | sort -u) )
+
+    # Debugging: Log the processed list of unique backups
+    echo "[DEBUG] Unique backup choices: ${backup_choices[@]}" >&2
 
     local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 $(for backup in "${backup_choices[@]}"; do echo "$backup" "$backup"; done) 3>&1 1>&2 2>&3)
     echo "[DEBUG] User selected backup: $backup_choice" >&2
