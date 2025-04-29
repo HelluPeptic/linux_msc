@@ -184,13 +184,22 @@ view_backups() {
     # Debugging: Log the raw list of backups before processing
     echo "[DEBUG] Raw backups list: ${backups[@]}" >&2
 
-    # Extract just the filenames for the dialog menu and ensure uniqueness
-    local backup_choices=( $(basename -a "${backups[@]}" | sort -u) )
+    # Use an associative array to ensure unique entries for the dialog menu
+    declare -A unique_backups
+    for backup in "${backups[@]}"; do
+        unique_backups["$(basename "$backup")"]="1"
+    done
 
-    # Debugging: Log the processed list of unique backups
-    echo "[DEBUG] Unique backup choices: ${backup_choices[@]}" >&2
+    # Prepare the menu items from the unique backups
+    local menu_items=()
+    for backup in "${!unique_backups[@]}"; do
+        menu_items+=("$backup" "$backup")
+    done
 
-    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 $(for backup in "${backup_choices[@]}"; do echo "$backup" "$backup"; done) 3>&1 1>&2 2>&3)
+    # Debugging: Log the final menu items
+    echo "[DEBUG] Final menu items: ${menu_items[@]}" >&2
+
+    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
     echo "[DEBUG] User selected backup: $backup_choice" >&2
 
     if [ -z "$backup_choice" ]; then
@@ -307,8 +316,8 @@ while true; do
         action=$(dialog --menu "Manage $full_server_name (Not Running):" 15 50 10 \
             "1" "Start Server" \
             "2" "Edit server.properties" \
-            "3" "Delete Server" \
-            "4" "Backups" \
+            "3" "Backups" \
+            "4" "Delete Server" \
             "5" "Exit Menu" 3>&1 1>&2 2>&3)
 
         echo "[DEBUG] Selected action for not running server: $action" >&2
@@ -316,8 +325,7 @@ while true; do
         case $action in
             1) start_server "$full_server_name" ;;
             2) edit_properties "$full_server_name" ;;
-            3) delete_server "$full_server_name" ;;
-            4)
+            3)
                 backup_action=$(dialog --menu "Backups for $full_server_name:" 15 50 10 \
                     "1" "Create a new backup" \
                     "2" "View backups" 3>&1 1>&2 2>&3)
@@ -329,6 +337,7 @@ while true; do
                     2) view_backups "$full_server_name" ;;
                 esac
                 ;;
+            4) delete_server "$full_server_name" ;;
             5) ;;
         esac
     fi
