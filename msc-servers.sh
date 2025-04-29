@@ -183,22 +183,13 @@ view_backups() {
     local backups=( $(find "$backup_dir" -type f -name "*.tar.gz" | sort -u) )
     echo "[DEBUG] Raw backups list: ${backups[@]}" >&2
 
-    # Use an associative array to ensure unique entries for the dialog menu
-    declare -A unique_backups
-    for backup in "${backups[@]}"; do
-        unique_backups["$(basename "$backup")"]="1"
-    done
+    # Extract just the filenames for the dialog menu and ensure uniqueness
+    local backup_choices=( $(for backup in "${backups[@]}"; do basename "$backup"; done | sort -u) )
 
-    # Prepare the menu items from the unique backups
-    local menu_items=()
-    for backup in "${!unique_backups[@]}"; do
-        menu_items+=("$backup" "$backup")
-    done
+    # Debugging: Log the processed list of unique backups
+    echo "[DEBUG] Unique backup choices: ${backup_choices[@]}" >&2
 
-    # Debugging: Log the final menu items
-    echo "[DEBUG] Final menu items: ${menu_items[@]}" >&2
-
-    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 $(for backup in "${backup_choices[@]}"; do echo "$backup" "$backup"; done) 3>&1 1>&2 2>&3)
     echo "[DEBUG] User selected backup: $backup_choice" >&2
 
     if [ -z "$backup_choice" ]; then
