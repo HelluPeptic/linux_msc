@@ -133,9 +133,11 @@ kill_server() {
 create_backup() {
     local server_name="$1"
     local backup_dir="$server_name/backups"
-    mkdir -p "$backup_dir"  # Ensure the backups directory is created
+    echo "[DEBUG] Creating backup directory: $backup_dir" >&2
+    mkdir -p "$backup_dir"
 
     local backup_name=$(dialog --inputbox "Choose a name for the backup:" 10 50 3>&1 1>&2 2>&3)
+    echo "[DEBUG] User entered backup name: $backup_name" >&2
     if [ -z "$backup_name" ]; then
         dialog --msgbox "Backup creation canceled." 10 50
         return
@@ -143,22 +145,39 @@ create_backup() {
 
     local timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
     local backup_path="$backup_dir/${backup_name}_$timestamp.tar.gz"
+    echo "[DEBUG] Backup path: $backup_path" >&2
 
-    ( # Background process to simulate progress
-        for i in {1..100}; do
-            echo $i
-            sleep 0.05
-        done
-    ) | dialog --title "Creating Backup" --gauge "Backing up $server_name..." 10 50
+    (
+        echo 10
+        echo "# Preparing backup..."
+        sleep 0.5
 
-    tar -czf "$backup_path" "$server_name"
+        echo 30
+        echo "# Analyzing files..."
+        sleep 0.5
+
+        echo 50
+        echo "# Compressing backup..."
+        tar -czf "$backup_path" "$server_name" 2>/dev/null
+
+        echo 90
+        echo "# Finalizing..."
+        sleep 0.5
+
+        echo 100
+        echo "# Backup complete."
+        sleep 0.3
+    ) | dialog --title "Creating Backup" --gauge "Please wait..." 10 60 0
 
     if [ -f "$backup_path" ]; then
+        echo "[DEBUG] Backup created successfully: $backup_path" >&2
         dialog --msgbox "Backup created successfully: $backup_path" 10 50
     else
+        echo "[DEBUG] Backup creation failed." >&2
         dialog --msgbox "Backup creation failed." 10 50
     fi
 }
+
 
 view_backups() {
     local server_name="$1"
