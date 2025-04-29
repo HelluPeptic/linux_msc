@@ -216,11 +216,15 @@ view_backups() {
             echo "[DEBUG] User entered new name: $new_name" >&2
             if [ -n "$new_name" ]; then
                 # Ensure the renamed backup remains in the correct directory and format
-                local old_path="$backup_dir/$backup_choice"
+                local old_path="$backup_dir/$(echo "$backup_choice" | sed -E 's/ \| /_/g' | sed -E 's/ /_/g').tar.gz"
                 local new_path="$backup_dir/${new_name}_$timestamp.tar.gz"
                 echo "[DEBUG] Renaming $old_path to $new_path" >&2
-                mv "$old_path" "$new_path"
-                dialog --msgbox "Backup renamed successfully to ${new_name}_$timestamp.tar.gz." 10 50
+                if [ -f "$old_path" ]; then
+                    mv "$old_path" "$new_path"
+                    dialog --msgbox "Backup renamed successfully to ${new_name}_$timestamp.tar.gz." 10 50
+                else
+                    dialog --msgbox "Error: Original backup file not found: $old_path" 10 50
+                fi
             fi
             ;;
         3)
