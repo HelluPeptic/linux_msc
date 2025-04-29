@@ -170,7 +170,7 @@ create_backup() {
 # Fix duplicate backups in the list and preserve date when renaming
 view_backups() {
     local server_name="$1"
-    local backup_dir="backups/$server_name"
+    local backup_dir="$server_name/backups"
     echo "[DEBUG] Viewing backups in directory: $backup_dir" >&2
 
     if [ ! -d "$backup_dir" ]; then
@@ -181,7 +181,6 @@ view_backups() {
 
     # Use find to list only valid backup files and ensure uniqueness
     local backups=( $(find "$backup_dir" -type f -name "*.tar.gz" | sort -u) )
-    # Debugging: Log the raw list of backups before processing
     echo "[DEBUG] Raw backups list: ${backups[@]}" >&2
 
     # Use an associative array to ensure unique entries for the dialog menu
