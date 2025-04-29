@@ -186,13 +186,13 @@ view_backups() {
     # Prepare the menu items from the formatted backups
     local menu_items=()
     for backup in "${backups[@]}"; do
-        menu_items+=("$backup" "")
+        menu_items+=("$backup" "Backup entry")
     done
 
     # Debugging: Log the final menu items
     echo "[DEBUG] Final menu items: ${menu_items[@]}" >&2
 
-    local backup_choice=$(dialog --menu "Select a backup:" 15 70 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3 | tr -d '\n')
     echo "[DEBUG] User selected backup: $backup_choice" >&2
 
     if [ -z "$backup_choice" ]; then
