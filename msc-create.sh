@@ -72,9 +72,6 @@ case $choice in
         server_type="folia"
         versions=(
             1 "1.21.4"
-            1 "1.21.1"
-            1 "1.20.4 (not functional)"
-            1 "1.20.1 (not functional)"
         )
         ;;
 esac
@@ -175,9 +172,6 @@ case $server_type in
     "folia")
         case $server_version in
             "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
-            "1.21.1") bash "$create_scripts_dir/msc_folia_1.24.1.sh" "$server_dir" ;;
-            "1.20.4") bash "$create_scripts_dir/msc_folia_1.20.4.sh" "$server_dir" ;;
-            "1.20.1") bash "$create_scripts_dir/msc_folia_1.20.1.sh" "$server_dir" ;;
         esac
 esac
 
