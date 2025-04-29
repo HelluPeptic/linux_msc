@@ -180,19 +180,19 @@ view_backups() {
     fi
 
     # Use find to list only valid backup files and format them for display on a single line
-    local backups=( $(find "$backup_dir" -type f -name "*.tar.gz" -exec basename {} \; | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2}).tar.gz/\1 | \2 \3:\4:\5/' | sort -u) )
+    local backups=( $(find "$backup_dir" -type f -name "*.tar.gz" -exec basename {} \; | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2}).tar.gz/\1 \| \2 \3:\4:\5/' | sort -u) )
     echo "[DEBUG] Formatted backups list: ${backups[@]}" >&2
 
     # Prepare the menu items from the formatted backups
     local menu_items=()
     for backup in "${backups[@]}"; do
-        menu_items+=("$backup" "Backup entry")
+        menu_items+=("$backup" "")
     done
 
     # Debugging: Log the final menu items
     echo "[DEBUG] Final menu items: ${menu_items[@]}" >&2
 
-    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3 | tr -d '\n')
+    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
     echo "[DEBUG] User selected backup: $backup_choice" >&2
 
     if [ -z "$backup_choice" ]; then
