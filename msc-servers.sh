@@ -215,9 +215,12 @@ view_backups() {
             local new_name=$(dialog --inputbox "Enter a new name for the backup (date will be preserved):" 10 50 3>&1 1>&2 2>&3)
             echo "[DEBUG] User entered new name: $new_name" >&2
             if [ -n "$new_name" ]; then
-                local timestamp=$(echo "$backup_choice" | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}")
-                mv "$backup_dir/$backup_choice" "$backup_dir/${new_name}_$timestamp.tar.gz"
-                dialog --msgbox "Backup renamed successfully." 10 50
+                # Ensure the renamed backup remains in the correct directory and format
+                local old_path="$backup_dir/$backup_choice"
+                local new_path="$backup_dir/${new_name}_$timestamp.tar.gz"
+                echo "[DEBUG] Renaming $old_path to $new_path" >&2
+                mv "$old_path" "$new_path"
+                dialog --msgbox "Backup renamed successfully to ${new_name}_$timestamp.tar.gz." 10 50
             fi
             ;;
         3)
