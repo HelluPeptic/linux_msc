@@ -148,29 +148,48 @@ create_backup() {
     echo "[DEBUG] Backup path: $backup_path" >&2
 
     (
-        echo "5"; echo "Initializing backup..."; sleep 0.2
-        echo "10"; echo "Preparing directories..."; sleep 0.2
-        echo "15"; echo "Scanning files..."; sleep 0.2
-        echo "20"; echo "Counting files..."; sleep 0.2
-        echo "25"; echo "Estimating size..."; sleep 0.2
-        echo "30"; echo "Creating archive structure..."; sleep 0.2
-        echo "35"; echo "Starting compression..."; sleep 0.2
+        # Starting the backup process with initial text
+        echo "5"; dialog --gauge "Initializing backup..." 10 60 5
+        sleep 0.2
+
+        echo "10"; dialog --gauge "Preparing directories..." 10 60 10
+        sleep 0.2
+
+        echo "15"; dialog --gauge "Scanning files..." 10 60 15
+        sleep 0.2
+
+        echo "20"; dialog --gauge "Counting files..." 10 60 20
+        sleep 0.2
+
+        echo "25"; dialog --gauge "Estimating size..." 10 60 25
+        sleep 0.2
+
+        echo "30"; dialog --gauge "Creating archive structure..." 10 60 30
+        sleep 0.2
+
+        echo "35"; dialog --gauge "Starting compression..." 10 60 35
+        sleep 0.2
 
         # Simulate progress during compression
         for i in {36..85}; do
             percent=$((i))
             message="Compressing... ($((i - 35))%)"
-            echo "$percent"; echo "$message"
+            echo "$percent"; dialog --gauge "$message" 10 60 "$percent"
             sleep 0.05
         done
 
         # Actual compression, excluding the backups folder
         tar --exclude="$server_name/backups" -czf "$backup_path" "$server_name" 2>/dev/null
 
-        echo "90"; echo "Finalizing archive..."; sleep 0.2
-        echo "95"; echo "Cleaning up..."; sleep 0.2
-        echo "100"; echo "Backup complete."; sleep 0.2
-    ) | dialog --title "Creating Backup" --gauge "Please wait..." 10 60 0
+        echo "90"; dialog --gauge "Finalizing archive..." 10 60 90
+        sleep 0.2
+
+        echo "95"; dialog --gauge "Cleaning up..." 10 60 95
+        sleep 0.2
+
+        echo "100"; dialog --gauge "Backup complete." 10 60 100
+        sleep 0.2
+    ) 
 
     if [ -f "$backup_path" ]; then
         echo "[DEBUG] Backup created successfully: $backup_path" >&2
@@ -180,11 +199,6 @@ create_backup() {
         dialog --msgbox "Backup creation failed." 10 50
     fi
 }
-
-
-
-
-
 
 view_backups() {
     local server_name="$1"
