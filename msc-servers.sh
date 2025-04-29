@@ -197,59 +197,63 @@ view_backups() {
     echo "[DEBUG] Viewing backups in directory: $backup_dir" >&2
 
     if [ ! -d "$backup_dir" ]; then
-        echo "[DEBUG] Backup directory does not exist." >&2
         dialog --msgbox "No backups found for $server_name." 10 50
         return
     fi
 
-    # Create a map between pretty names and actual filenames
-    local -A backup_map=()
-    local menu_items=()
-
+    # Get list of backups sorted by modification time (newest first)
+    local backups=()
     while IFS= read -r file; do
-        base_name="${file%.tar.gz}"
-        pretty_name=$(echo "$base_name" | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2})/\1 | \2 \3:\4:\5/')
-        backup_map["$pretty_name"]="$file"
-        menu_items+=("$pretty_name" "")
-    done < <(find "$backup_dir" -type f -name "*.tar.gz" -exec basename {} \; | sort -u)
+        local filename=$(basename "$file")
+        local readable_name=$(echo "$filename" | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2}).tar.gz/\1 | \2 \3:\4:\5/')
+        backups+=("$filename" "$readable_name")
+    done < <(find "$backup_dir" -type f -name "*.tar.gz" -printf "%T@ %p\n" | sort -nr | awk '{print $2}')
 
-    if [ ${#menu_items[@]} -eq 0 ]; then
+    if [ ${#backups[@]} -eq 0 ]; then
         dialog --msgbox "No backups found for $server_name." 10 50
         return
     fi
 
-    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
-    [ -z "$backup_choice" ] && return
+    local backup_choice=$(dialog --menu "Select a backup:" 20 60 10 "${backups[@]}" 3>&1 1>&2 2>&3)
+    echo "[DEBUG] User selected backup: $backup_choice" >&2
 
-    local actual_file="${backup_map[$backup_choice]}"
-    local backup_path="$backup_dir/$actual_file"
+    if [ -z "$backup_choice" ]; then
+        return
+    fi
 
     local action=$(dialog --menu "Manage $backup_choice:" 15 50 10 \
         "1" "Restore to this backup" \
         "2" "Rename this backup" \
         "3" "Delete this backup" 3>&1 1>&2 2>&3)
+    echo "[DEBUG] User selected action: $action" >&2
 
     case $action in
         1)
-            echo "[DEBUG] Restoring backup: $backup_path" >&2
-            tar -xzf "$backup_path" -C .
+            tar -xzf "$backup_dir/$backup_choice" -C .
             dialog --msgbox "Backup restored successfully." 10 50
             ;;
         2)
             local new_name=$(dialog --inputbox "Enter a new name for the backup (date will be preserved):" 10 50 3>&1 1>&2 2>&3)
+            echo "[DEBUG] User entered new name: $new_name" >&2
             if [ -n "$new_name" ]; then
-                local timestamp=$(echo "$actual_file" | sed -E 's/.*_([0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2})\.tar\.gz/\1/')
-                local new_file="${new_name}_${timestamp}.tar.gz"
-                mv "$backup_path" "$backup_dir/$new_file"
-                dialog --msgbox "Backup renamed to $new_file" 10 50
+                local date_part=$(echo "$backup_choice" | sed -E 's/^.*_([0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2})\.tar\.gz$/\1/')
+                local old_path="$backup_dir/$backup_choice"
+                local new_path="$backup_dir/${new_name}_${date_part}.tar.gz"
+                if [ -f "$old_path" ]; then
+                    mv "$old_path" "$new_path"
+                    dialog --msgbox "Backup renamed to ${new_name}_${date_part}.tar.gz." 10 50
+                else
+                    dialog --msgbox "Error: Backup file not found." 10 50
+                fi
             fi
             ;;
         3)
-            rm "$backup_path"
+            rm "$backup_dir/$backup_choice"
             dialog --msgbox "Backup deleted successfully." 10 50
             ;;
     esac
 }
+
 
 
 
