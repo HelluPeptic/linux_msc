@@ -147,9 +147,26 @@ while true; do
         exit 0
     fi
 
+    # Sort servers so that running servers appear at the top
+    sorted_server_dirs=()
+    running_servers=()
+    not_running_servers=()
+
+    for server in "${server_dirs[@]}"; do
+        status=$(is_server_running "$server")
+        if [ "$status" == "Running" ]; then
+            running_servers+=("$server")
+        else
+            not_running_servers+=("$server")
+        fi
+
+    done
+
+    sorted_server_dirs=("${running_servers[@]}" "${not_running_servers[@]}")
+
     # Build the menu
     menu_items=()
-    for server in "${server_dirs[@]}"; do
+    for server in "${sorted_server_dirs[@]}"; do
         status=$(is_server_running "$server")
         menu_items+=("$server" "$status")
     done
