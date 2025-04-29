@@ -179,20 +179,23 @@ view_backups() {
         return
     fi
 
-    # Use find to list only valid backup files and format them for display exactly as requested
-    local backups=( $(find "$backup_dir" -type f -name "*.tar.gz" -exec basename {} \; | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2}).tar.gz/\1 | \2 \3:\4:\5/' | sort -u) )
-    echo "[DEBUG] Formatted backups list: ${backups[@]}" >&2
+    # Get a properly joined list with escaped newlines and spaces handled
+    mapfile -t backups < <(
+        find "$backup_dir" -type f -name "*.tar.gz" \
+        -exec basename {} \; | \
+        sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2}).tar.gz/\1_\2_\3:\4:\5/' | \
+        sort -u
+    )
+    echo "[DEBUG] Formatted backups list: ${backups[*]}" >&2
 
-    # Prepare the menu items from the formatted backups
     local menu_items=()
     for backup in "${backups[@]}"; do
         menu_items+=("$backup" "")
     done
 
-    # Debugging: Log the final menu items
-    echo "[DEBUG] Final menu items: ${menu_items[@]}" >&2
+    echo "[DEBUG] Final menu items: ${menu_items[*]}" >&2
 
-    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    local backup_choice=$(dialog --menu "Select a backup:" 15 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
     echo "[DEBUG] User selected backup: $backup_choice" >&2
 
     if [ -z "$backup_choice" ]; then
@@ -207,32 +210,35 @@ view_backups() {
 
     case $action in
         1)
-            echo "[DEBUG] Restoring backup: $backup_dir/$backup_choice" >&2
-            tar -xzf "$backup_dir/$backup_choice" -C .
+            local path="$backup_dir/$(echo "$backup_choice" | sed 's/:/-/g').tar.gz"
+            echo "[DEBUG] Restoring backup: $path" >&2
+            tar -xzf "$path" -C .
             dialog --msgbox "Backup restored successfully." 10 50
             ;;
         2)
             local new_name=$(dialog --inputbox "Enter a new name for the backup (date will be preserved):" 10 50 3>&1 1>&2 2>&3)
             echo "[DEBUG] User entered new name: $new_name" >&2
             if [ -n "$new_name" ]; then
-                # Ensure the renamed backup remains in the correct directory and format
-                local old_path="$backup_dir/$(echo "$backup_choice" | sed -E 's/ \| /_/g' | sed -E 's/ /_/g').tar.gz"
-                local new_path="$backup_dir/${new_name}_$timestamp.tar.gz"
+                local old_path="$backup_dir/$(echo "$backup_choice" | sed 's/:/-/g').tar.gz"
+                local date_part=$(echo "$backup_choice" | sed -E 's/.*_([0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2})/\1/' | sed 's/:/-/g')
+                local new_path="$backup_dir/${new_name}_$date_part.tar.gz"
                 echo "[DEBUG] Renaming $old_path to $new_path" >&2
                 if [ -f "$old_path" ]; then
                     mv "$old_path" "$new_path"
-                    dialog --msgbox "Backup renamed successfully to ${new_name}_$timestamp.tar.gz." 10 50
+                    dialog --msgbox "Backup renamed successfully to ${new_name}_$date_part.tar.gz." 10 50
                 else
                     dialog --msgbox "Error: Original backup file not found: $old_path" 10 50
                 fi
             fi
             ;;
         3)
-            rm "$backup_dir/$backup_choice"
+            local delete_path="$backup_dir/$(echo "$backup_choice" | sed 's/:/-/g').tar.gz"
+            rm "$delete_path"
             dialog --msgbox "Backup deleted successfully." 10 50
             ;;
     esac
 }
+
 
 # Add debugging to track menu selection and flow
 while true; do
