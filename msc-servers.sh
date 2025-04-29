@@ -186,7 +186,7 @@ view_backups() {
     # Prepare the menu items from the formatted backups
     local menu_items=()
     for backup in "${backups[@]}"; do
-        menu_items+=("$backup" "$backup")
+        menu_items+=("$backup")
     done
 
     # Debugging: Log the final menu items
