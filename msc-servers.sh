@@ -181,21 +181,18 @@ view_backups() {
 
     # Get a properly joined list with escaped newlines and spaces handled
     mapfile -t backups < <(
-        find "$backup_dir" -type f -name "*.tar.gz" \
-        -exec basename {} \; | \
-        sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2}).tar.gz/\1_\2_\3:\4:\5/' | \
-        sort -u
+        find "$backup_dir" -type f -name "*.tar.gz" -exec basename {} \; | sort -u
     )
-    echo "[DEBUG] Formatted backups list: ${backups[*]}" >&2
 
-    local menu_items=()
-    for backup in "${backups[@]}"; do
-        menu_items+=("$backup" "")
+    menu_items=()
+    for file in "${backups[@]}"; do
+        base_name="${file%.tar.gz}"
+        readable_name=$(echo "$base_name" | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2})/\1 | \2 \3:\4:\5/')
+        menu_items+=("$file" "$readable_name")
     done
 
-    echo "[DEBUG] Final menu items: ${menu_items[*]}" >&2
+    backup_choice=$(dialog --menu "Select a backup:" 15 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
 
-    local backup_choice=$(dialog --menu "Select a backup:" 15 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
     echo "[DEBUG] User selected backup: $backup_choice" >&2
 
     if [ -z "$backup_choice" ]; then
