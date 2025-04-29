@@ -133,70 +133,66 @@ kill_server() {
 create_backup() {
     local server_name="$1"
     local backup_dir="$server_name/backups"
-    echo "[DEBUG] Creating backup directory: $backup_dir" >&2
     mkdir -p "$backup_dir"
 
     local backup_name=$(dialog --inputbox "Choose a name for the backup:" 10 50 3>&1 1>&2 2>&3)
-    echo "[DEBUG] User entered backup name: $backup_name" >&2
     if [ -z "$backup_name" ]; then
         dialog --msgbox "Backup creation canceled." 10 50
         return
     fi
 
+    # Replace spaces in the backup name with underscores to ensure compatibility
+    local sanitized_backup_name=$(echo "$backup_name" | sed 's/ /_/g')
     local timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
-    local backup_path="$backup_dir/${backup_name}_$timestamp.tar.gz"
-    echo "[DEBUG] Backup path: $backup_path" >&2
+    local backup_path="$backup_dir/${sanitized_backup_name}_$timestamp.tar.gz"
 
     {
-        echo "5";  echo
+        echo -e "5"
         sleep 0.2
-        echo "10"; echo
+        echo -e "10"
         sleep 0.2
-        echo "15"; echo
+        echo -e "15"
         sleep 0.2
-        echo "20"; echo
+        echo -e "20"
         sleep 0.2
-        echo "25"; echo
+        echo -e "25"
         sleep 0.2
-        echo "30"; echo
+        echo -e "30"
         sleep 0.2
-        echo "35"; echo
+        echo -e "35"
         sleep 0.2
 
+        # Simulate progress during compression
         for i in {36..85}; do
-            echo "$i"; echo
+            echo -e "$i\nCompressing... ($((i - 35))%)"
             sleep 0.05
         done
 
+        # Actual compression, excluding the backups folder
         tar --exclude="$server_name/backups" -czf "$backup_path" "$server_name" 2>/dev/null
 
-        echo "90"; echo
+        echo -e "90"
         sleep 0.2
-        echo "95"; echo
+        echo -e "95"
         sleep 0.2
-        echo "100"; echo
+        echo -e "100"
         sleep 0.2
-    } | dialog --title "Creating Backup" --gauge "" 10 60 0
+    } | dialog --title "Creating Backup" --gauge "Please wait..." 10 60 0
 
     if [ -f "$backup_path" ]; then
-        echo "[DEBUG] Backup created successfully: $backup_path" >&2
         dialog --msgbox "Backup created successfully: $backup_path" 10 50
     else
-        echo "[DEBUG] Backup creation failed." >&2
         dialog --msgbox "Backup creation failed." 10 50
     fi
 }
 
 
 
-
 view_backups() {
     local server_name="$1"
     local backup_dir="$server_name/backups"
-    echo "[DEBUG] Viewing backups in directory: $backup_dir" >&2
 
     if [ ! -d "$backup_dir" ]; then
-        echo "[DEBUG] Backup directory does not exist." >&2
         dialog --msgbox "No backups found for $server_name." 10 50
         return
     fi
@@ -213,7 +209,6 @@ view_backups() {
     done < <(find "$backup_dir" -type f -name "*.tar.gz" -printf "%T@ %p\n" | sort -nr | awk '{print $2}')
 
     local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
-    echo "[DEBUG] User selected backup: $backup_choice" >&2
 
     if [ -z "$backup_choice" ]; then
         return
@@ -224,7 +219,6 @@ view_backups() {
         "1" "Restore to this backup" \
         "2" "Rename this backup" \
         "3" "Delete this backup" 3>&1 1>&2 2>&3)
-    echo "[DEBUG] User selected action: $action" >&2
 
     case $action in
         1)
@@ -289,8 +283,6 @@ while true; do
         clear
         exit 0
     fi
-
-    echo "[DEBUG] Selected server: $selected_server" >&2
 
     full_server_name="$selected_server"
     status=$(is_server_running "$full_server_name")
