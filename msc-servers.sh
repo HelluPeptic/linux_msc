@@ -187,7 +187,7 @@ view_backups() {
         return
     fi
 
-    local backup_choice=$(dialog --menu "Select a backup:" 18 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
     [ -z "$backup_choice" ] && return
 
     local actual_file="${backup_map[$backup_choice]}"
