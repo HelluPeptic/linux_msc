@@ -148,37 +148,35 @@ create_backup() {
     echo "[DEBUG] Backup path: $backup_path" >&2
 
     {
-        echo -e "5\nInitializing backup..."
+        echo "5";  echo
         sleep 0.2
-        echo -e "10\nPreparing directories..."
+        echo "10"; echo
         sleep 0.2
-        echo -e "15\nScanning files..."
+        echo "15"; echo
         sleep 0.2
-        echo -e "20\nCounting files..."
+        echo "20"; echo
         sleep 0.2
-        echo -e "25\nEstimating size..."
+        echo "25"; echo
         sleep 0.2
-        echo -e "30\nCreating archive structure..."
+        echo "30"; echo
         sleep 0.2
-        echo -e "35\nStarting compression..."
+        echo "35"; echo
         sleep 0.2
 
-        # Simulate progress during compression
         for i in {36..85}; do
-            echo -e "$i\nCompressing... ($((i - 35))%)"
+            echo "$i"; echo
             sleep 0.05
         done
 
-        # Actual compression, excluding the backups folder
         tar --exclude="$server_name/backups" -czf "$backup_path" "$server_name" 2>/dev/null
 
-        echo -e "90\nFinalizing archive..."
+        echo "90"; echo
         sleep 0.2
-        echo -e "95\nCleaning up..."
+        echo "95"; echo
         sleep 0.2
-        echo -e "100\nBackup complete."
+        echo "100"; echo
         sleep 0.2
-    } | dialog --title "Creating Backup" --gauge "Please wait..." 10 60 0
+    } | dialog --title "Creating Backup" --gauge "" 10 60 0
 
     if [ -f "$backup_path" ]; then
         echo "[DEBUG] Backup created successfully: $backup_path" >&2
@@ -188,6 +186,7 @@ create_backup() {
         dialog --msgbox "Backup creation failed." 10 50
     fi
 }
+
 
 
 
