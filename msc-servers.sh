@@ -188,7 +188,7 @@ view_backups() {
     for file in "${backups[@]}"; do
         base_name="${file%.tar.gz}"
         readable_name=$(echo "$base_name" | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2})/\1 | \2 \3:\4:\5/')
-        menu_items+=("$file" "$readable_name")
+        menu_items+=("$readable_name")
     done
 
     backup_choice=$(dialog --menu "Select a backup:" 15 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
