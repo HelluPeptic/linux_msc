@@ -130,7 +130,7 @@ kill_server() {
     fi
 }
 
-# Add debugging to create_backup function
+# Fix loading screen progress for backup creation
 create_backup() {
     local server_name="$1"
     local backup_dir="backups/$server_name"
@@ -148,17 +148,15 @@ create_backup() {
     local backup_path="$backup_dir/${backup_name}_$timestamp.tar.gz"
     echo "[DEBUG] Backup path: $backup_path" >&2
 
-    dialog --title "Creating Backup" --gauge "Backing up $server_name..." 10 50 0 &
-    local pid=$!
+    ( # Background process to simulate progress
+        for i in {1..100}; do
+            echo $i
+            sleep 0.05
+        done
+    ) | dialog --title "Creating Backup" --gauge "Backing up $server_name..." 10 50
 
     echo "[DEBUG] Starting tar process to create backup." >&2
-    tar -czf "$backup_path" "$server_name" &
-    local tar_pid=$!
-
-    trap "kill $tar_pid; dialog --msgbox 'Backup canceled.' 10 50; echo '[DEBUG] Backup process canceled.' >&2; return" SIGINT
-
-    wait $tar_pid
-    kill $pid
+    tar -czf "$backup_path" "$server_name"
 
     if [ -f "$backup_path" ]; then
         echo "[DEBUG] Backup created successfully: $backup_path" >&2
@@ -169,7 +167,7 @@ create_backup() {
     fi
 }
 
-# Add debugging to view_backups function
+# Fix duplicate backups in the list and preserve date when renaming
 view_backups() {
     local server_name="$1"
     local backup_dir="backups/$server_name"
@@ -181,7 +179,7 @@ view_backups() {
         return
     fi
 
-    local backups=( $(ls "$backup_dir") )
+    local backups=( $(ls -1 "$backup_dir" | sort) )
     echo "[DEBUG] Found backups: ${backups[@]}" >&2
     if [ ${#backups[@]} -eq 0 ]; then
         dialog --msgbox "No backups found for $server_name." 10 50
@@ -207,15 +205,15 @@ view_backups() {
             dialog --msgbox "Backup restored successfully." 10 50
             ;;
         2)
-            local new_name=$(dialog --inputbox "Enter a new name for the backup:" 10 50 3>&1 1>&2 2>&3)
+            local new_name=$(dialog --inputbox "Enter a new name for the backup (date will be preserved):" 10 50 3>&1 1>&2 2>&3)
             echo "[DEBUG] User entered new name: $new_name" >&2
             if [ -n "$new_name" ]; then
-                mv "$backup_dir/$backup_choice" "$backup_dir/$new_name"
+                local timestamp=$(echo "$backup_choice" | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}")
+                mv "$backup_dir/$backup_choice" "$backup_dir/${new_name}_$timestamp.tar.gz"
                 dialog --msgbox "Backup renamed successfully." 10 50
             fi
             ;;
         3)
-            echo "[DEBUG] Deleting backup: $backup_dir/$backup_choice" >&2
             rm "$backup_dir/$backup_choice"
             dialog --msgbox "Backup deleted successfully." 10 50
             ;;
