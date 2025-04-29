@@ -163,37 +163,44 @@ create_backup() {
 view_backups() {
     local server_name="$1"
     local backup_dir="$server_name/backups"
+    echo "[DEBUG] Viewing backups in directory: $backup_dir" >&2
 
     if [ ! -d "$backup_dir" ]; then
+        echo "[DEBUG] Backup directory does not exist." >&2
         dialog --msgbox "No backups found for $server_name." 10 50
         return
     fi
 
-    # Use find to list only valid backup files and format them for display exactly as requested
-    local backups=( $(find "$backup_dir" -type f -name "*.tar.gz" -exec basename {} \; | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2}).tar.gz/\1 | \2 \3:\4:\5/' | sort -u) )
-
-    # Prepare the menu items from the formatted backups
+    # Create a map between pretty names and actual filenames
+    local -A backup_map=()
     local menu_items=()
-    for backup in "${backups[@]}"; do
-        menu_items+=("$backup" "")
-    done
 
-    local backup_choice=$(dialog --menu "Select a backup:" 25 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    while IFS= read -r file; do
+        base_name="${file%.tar.gz}"
+        pretty_name=$(echo "$base_name" | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2})/\1 | \2 \3:\4:\5/')
+        backup_map["$pretty_name"]="$file"
+        menu_items+=("$pretty_name" "")
+    done < <(find "$backup_dir" -type f -name "*.tar.gz" -exec basename {} \; | sort -u)
 
-    if [ -z "$backup_choice" ]; then
+    if [ ${#menu_items[@]} -eq 0 ]; then
+        dialog --msgbox "No backups found for $server_name." 10 50
         return
     fi
+
+    local backup_choice=$(dialog --menu "Select a backup:" 18 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    [ -z "$backup_choice" ] && return
 
     local actual_file="${backup_map[$backup_choice]}"
     local backup_path="$backup_dir/$actual_file"
 
-    local action=$(dialog --menu "Manage $backup_choice:" 10 50 10 \
+    local action=$(dialog --menu "Manage $backup_choice:" 15 50 10 \
         "1" "Restore to this backup" \
         "2" "Rename this backup" \
         "3" "Delete this backup" 3>&1 1>&2 2>&3)
 
     case $action in
         1)
+            echo "[DEBUG] Restoring backup: $backup_path" >&2
             tar -xzf "$backup_path" -C .
             dialog --msgbox "Backup restored successfully." 10 50
             ;;
@@ -212,6 +219,7 @@ view_backups() {
             ;;
     esac
 }
+
 
 
 while true; do
