@@ -130,11 +130,11 @@ kill_server() {
     fi
 }
 
-# Function to create a new backup
+# Fix create_backup function to ensure backups folder is created and name is chosen
 create_backup() {
     local server_name="$1"
     local backup_dir="backups/$server_name"
-    mkdir -p "$backup_dir"
+    mkdir -p "$backup_dir"  # Ensure the backups directory is created
 
     local backup_name=$(dialog --inputbox "Choose a name for the backup:" 10 50 3>&1 1>&2 2>&3)
     if [ -z "$backup_name" ]; then
@@ -159,7 +159,7 @@ create_backup() {
     dialog --msgbox "Backup created successfully: $backup_path" 10 50
 }
 
-# Function to view backups
+# Fix view_backups function to properly list and manage backups
 view_backups() {
     local server_name="$1"
     local backup_dir="backups/$server_name"
@@ -175,7 +175,7 @@ view_backups() {
         return
     fi
 
-    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${backups[@]}" 3>&1 1>&2 2>&3)
+    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 $(for backup in "${backups[@]}"; do echo "$backup" "$backup"; done) 3>&1 1>&2 2>&3)
     if [ -z "$backup_choice" ]; then
         return
     fi
