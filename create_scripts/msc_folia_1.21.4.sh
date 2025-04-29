@@ -120,6 +120,12 @@ build_folia() {
 java -Xms1G -Xmx$RAM_ALLOCATION -jar $FOLIA_JAR nogui" > "$SERVER_DIR/start.sh"
             chmod +x "$SERVER_DIR/start.sh"
             echo "start.sh updated to use Folia jar."
+
+            # Remove the folia_build folder to free up space
+            echo "Cleaning up: Removing folia_build folder..."
+            cd "$SERVER_DIR" || exit 1
+            rm -rf folia_build
+            echo "folia_build folder removed successfully."
         else
             echo "Error: Folia jar not found in the created folder: $SERVER_DIR."
             echo "Debug: Contents of $SERVER_DIR:"
