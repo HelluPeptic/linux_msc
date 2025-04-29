@@ -147,39 +147,36 @@ create_backup() {
     local backup_path="$backup_dir/${backup_name}_$timestamp.tar.gz"
     echo "[DEBUG] Backup path: $backup_path" >&2
 
-    # Start the dialog progress bar in the background
     {
-        echo "5"; echo "Initializing backup..."
+        echo -e "5\nInitializing backup..."
         sleep 0.2
-        echo "10"; echo "Preparing directories..."
+        echo -e "10\nPreparing directories..."
         sleep 0.2
-        echo "15"; echo "Scanning files..."
+        echo -e "15\nScanning files..."
         sleep 0.2
-        echo "20"; echo "Counting files..."
+        echo -e "20\nCounting files..."
         sleep 0.2
-        echo "25"; echo "Estimating size..."
+        echo -e "25\nEstimating size..."
         sleep 0.2
-        echo "30"; echo "Creating archive structure..."
+        echo -e "30\nCreating archive structure..."
         sleep 0.2
-        echo "35"; echo "Starting compression..."
+        echo -e "35\nStarting compression..."
         sleep 0.2
 
         # Simulate progress during compression
         for i in {36..85}; do
-            percent=$((i))
-            message="Compressing... ($((i - 35))%)"
-            echo "$percent"; echo "$message"
+            echo -e "$i\nCompressing... ($((i - 35))%)"
             sleep 0.05
         done
 
         # Actual compression, excluding the backups folder
         tar --exclude="$server_name/backups" -czf "$backup_path" "$server_name" 2>/dev/null
 
-        echo "90"; echo "Finalizing archive..."
+        echo -e "90\nFinalizing archive..."
         sleep 0.2
-        echo "95"; echo "Cleaning up..."
+        echo -e "95\nCleaning up..."
         sleep 0.2
-        echo "100"; echo "Backup complete."
+        echo -e "100\nBackup complete."
         sleep 0.2
     } | dialog --title "Creating Backup" --gauge "Please wait..." 10 60 0
 
@@ -191,6 +188,7 @@ create_backup() {
         dialog --msgbox "Backup creation failed." 10 50
     fi
 }
+
 
 
 view_backups() {
