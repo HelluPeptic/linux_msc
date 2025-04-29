@@ -195,14 +195,14 @@ view_backups() {
         return
     fi
 
-    local backup_choice=$(dialog --menu "Select a backup:" 15 60 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    local backup_choice=$(dialog --menu "Select a backup:" 10 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
     echo "[DEBUG] User selected backup: $backup_choice" >&2
     [ -z "$backup_choice" ] && return
 
     local actual_file="${backup_map[$backup_choice]}"
     local backup_path="$backup_dir/$actual_file"
 
-    local action=$(dialog --menu "Manage $backup_choice:" 15 50 10 \
+    local action=$(dialog --menu "Manage $backup_choice:" 10 50 10 \
         "1" "Restore to this backup" \
         "2" "Rename this backup" \
         "3" "Delete this backup" 3>&1 1>&2 2>&3)
