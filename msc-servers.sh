@@ -130,6 +130,80 @@ kill_server() {
     fi
 }
 
+# Function to create a new backup
+create_backup() {
+    local server_name="$1"
+    local backup_dir="backups/$server_name"
+    mkdir -p "$backup_dir"
+
+    local backup_name=$(dialog --inputbox "Choose a name for the backup:" 10 50 3>&1 1>&2 2>&3)
+    if [ -z "$backup_name" ]; then
+        dialog --msgbox "Backup creation canceled." 10 50
+        return
+    fi
+
+    local timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+    local backup_path="$backup_dir/${backup_name}_$timestamp.tar.gz"
+
+    dialog --title "Creating Backup" --gauge "Backing up $server_name..." 10 50 0 &
+    local pid=$!
+
+    tar -czf "$backup_path" "$server_name" &
+    local tar_pid=$!
+
+    trap "kill $tar_pid; dialog --msgbox 'Backup canceled.' 10 50; return" SIGINT
+
+    wait $tar_pid
+    kill $pid
+
+    dialog --msgbox "Backup created successfully: $backup_path" 10 50
+}
+
+# Function to view backups
+view_backups() {
+    local server_name="$1"
+    local backup_dir="backups/$server_name"
+
+    if [ ! -d "$backup_dir" ]; then
+        dialog --msgbox "No backups found for $server_name." 10 50
+        return
+    fi
+
+    local backups=( $(ls "$backup_dir") )
+    if [ ${#backups[@]} -eq 0 ]; then
+        dialog --msgbox "No backups found for $server_name." 10 50
+        return
+    fi
+
+    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${backups[@]}" 3>&1 1>&2 2>&3)
+    if [ -z "$backup_choice" ]; then
+        return
+    fi
+
+    local action=$(dialog --menu "Manage $backup_choice:" 15 50 10 \
+        "1" "Restore to this backup" \
+        "2" "Rename this backup" \
+        "3" "Delete this backup" 3>&1 1>&2 2>&3)
+
+    case $action in
+        1)
+            tar -xzf "$backup_dir/$backup_choice" -C .
+            dialog --msgbox "Backup restored successfully." 10 50
+            ;;
+        2)
+            local new_name=$(dialog --inputbox "Enter a new name for the backup:" 10 50 3>&1 1>&2 2>&3)
+            if [ -n "$new_name" ]; then
+                mv "$backup_dir/$backup_choice" "$backup_dir/$new_name"
+                dialog --msgbox "Backup renamed successfully." 10 50
+            fi
+            ;;
+        3)
+            rm "$backup_dir/$backup_choice"
+            dialog --msgbox "Backup deleted successfully." 10 50
+            ;;
+    esac
+}
+
 # Main menu loop
 while true; do
     # Fetch all server directories that contain a start.sh file
@@ -208,13 +282,24 @@ while true; do
             "1" "Start Server" \
             "2" "Edit server.properties" \
             "3" "Delete Server" \
-            "4" "Exit Menu" 3>&1 1>&2 2>&3)
+            "4" "Backups" \
+            "5" "Exit Menu" 3>&1 1>&2 2>&3)
 
         case $action in
             1) start_server "$full_server_name" ;;  # Use full server name
             2) edit_properties "$full_server_name" ;;
             3) delete_server "$full_server_name" ;;
-            4) ;;
+            4)
+                local backup_action=$(dialog --menu "Backups for $full_server_name:" 15 50 10 \
+                    "1" "Create a new backup" \
+                    "2" "View backups" 3>&1 1>&2 2>&3)
+
+                case $backup_action in
+                    1) create_backup "$full_server_name" ;;
+                    2) view_backups "$full_server_name" ;;
+                esac
+                ;;
+            5) ;;
         esac
     fi
 done
