@@ -222,9 +222,9 @@ view_backups() {
     esac
 }
 
-# Main menu loop
+# Add debugging to track menu selection and flow
 while true; do
-    # Fetch all server directories that contain a start.sh file
+    echo "[DEBUG] Fetching server directories..." >&2
     server_dirs=()
     for dir in */; do
         if [ -f "$dir/start.sh" ]; then
@@ -232,53 +232,56 @@ while true; do
         fi
     done
 
-    # If no servers are found, display a message and exit
+    echo "[DEBUG] Found server directories: ${server_dirs[@]}" >&2
+
     if [ ${#server_dirs[@]} -eq 0 ]; then
         dialog --title "No Servers Found" --msgbox "No Minecraft servers with a start.sh file found in the current directory." 10 50
+        echo "[DEBUG] No servers found. Exiting." >&2
         clear
         exit 0
     fi
 
-    # Sort servers so that running servers appear at the top
+    echo "[DEBUG] Sorting servers by status..." >&2
     sorted_server_dirs=()
     running_servers=()
     not_running_servers=()
 
     for server in "${server_dirs[@]}"; do
         status=$(is_server_running "$server")
+        echo "[DEBUG] Server: $server, Status: $status" >&2
         if [ "$status" == "Running" ]; then
             running_servers+=("$server")
         else
             not_running_servers+=("$server")
         fi
-
     done
 
     sorted_server_dirs=("${running_servers[@]}" "${not_running_servers[@]}")
 
-    # Build the menu
+    echo "[DEBUG] Sorted servers: ${sorted_server_dirs[@]}" >&2
+
     menu_items=()
     for server in "${sorted_server_dirs[@]}"; do
         status=$(is_server_running "$server")
         menu_items+=("$server" "$status")
     done
 
-    # Display the menu
+    echo "[DEBUG] Building menu items: ${menu_items[@]}" >&2
+
     selected_server=$(dialog --menu "Select a server:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
 
-    # Handle cancellation
     if [ -z "$selected_server" ]; then
+        echo "[DEBUG] No server selected. Exiting." >&2
         clear
         exit 0
     fi
 
-    # Full server name: include the client and version
+    echo "[DEBUG] Selected server: $selected_server" >&2
+
     full_server_name="$selected_server"
-
-    # Check the server's status
     status=$(is_server_running "$full_server_name")
+    echo "[DEBUG] Status of selected server: $status" >&2
 
-    # Build actions based on status
     if [ "$status" == "Running" ]; then
         action=$(dialog --menu "Manage $full_server_name (Running):" 15 50 10 \
             "1" "View Console" \
@@ -286,15 +289,17 @@ while true; do
             "3" "Kill Server" \
             "4" "Exit Menu" 3>&1 1>&2 2>&3)
 
+        echo "[DEBUG] Selected action for running server: $action" >&2
+
         case $action in
             1) view_console "$full_server_name" ;;
-            2) stop_server "$full_server_name" ;;  # Update status dynamically
+            2) stop_server "$full_server_name" ;;
             3) kill_server "$full_server_name" ;;
             4) ;;
         esac
     elif [ "$status" == "Shutting Down" ]; then
-        # Refresh the menu while the server is shutting down
         dialog --msgbox "The server $full_server_name is currently shutting down. Please wait." 10 50
+        echo "[DEBUG] Server is shutting down." >&2
     else
         action=$(dialog --menu "Manage $full_server_name (Not Running):" 15 50 10 \
             "1" "Start Server" \
@@ -303,14 +308,18 @@ while true; do
             "4" "Backups" \
             "5" "Exit Menu" 3>&1 1>&2 2>&3)
 
+        echo "[DEBUG] Selected action for not running server: $action" >&2
+
         case $action in
-            1) start_server "$full_server_name" ;;  # Use full server name
+            1) start_server "$full_server_name" ;;
             2) edit_properties "$full_server_name" ;;
             3) delete_server "$full_server_name" ;;
             4)
-                local backup_action=$(dialog --menu "Backups for $full_server_name:" 15 50 10 \
+                backup_action=$(dialog --menu "Backups for $full_server_name:" 15 50 10 \
                     "1" "Create a new backup" \
                     "2" "View backups" 3>&1 1>&2 2>&3)
+
+                echo "[DEBUG] Selected backup action: $backup_action" >&2
 
                 case $backup_action in
                     1) create_backup "$full_server_name" ;;
@@ -320,4 +329,5 @@ while true; do
             5) ;;
         esac
     fi
+
 done
