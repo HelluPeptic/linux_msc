@@ -130,13 +130,15 @@ kill_server() {
     fi
 }
 
-# Fix create_backup function to ensure backups folder is created and name is chosen
+# Add debugging to create_backup function
 create_backup() {
     local server_name="$1"
     local backup_dir="backups/$server_name"
+    echo "[DEBUG] Creating backup directory: $backup_dir" >&2
     mkdir -p "$backup_dir"  # Ensure the backups directory is created
 
     local backup_name=$(dialog --inputbox "Choose a name for the backup:" 10 50 3>&1 1>&2 2>&3)
+    echo "[DEBUG] User entered backup name: $backup_name" >&2
     if [ -z "$backup_name" ]; then
         dialog --msgbox "Backup creation canceled." 10 50
         return
@@ -144,38 +146,50 @@ create_backup() {
 
     local timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
     local backup_path="$backup_dir/${backup_name}_$timestamp.tar.gz"
+    echo "[DEBUG] Backup path: $backup_path" >&2
 
     dialog --title "Creating Backup" --gauge "Backing up $server_name..." 10 50 0 &
     local pid=$!
 
+    echo "[DEBUG] Starting tar process to create backup." >&2
     tar -czf "$backup_path" "$server_name" &
     local tar_pid=$!
 
-    trap "kill $tar_pid; dialog --msgbox 'Backup canceled.' 10 50; return" SIGINT
+    trap "kill $tar_pid; dialog --msgbox 'Backup canceled.' 10 50; echo '[DEBUG] Backup process canceled.' >&2; return" SIGINT
 
     wait $tar_pid
     kill $pid
 
-    dialog --msgbox "Backup created successfully: $backup_path" 10 50
+    if [ -f "$backup_path" ]; then
+        echo "[DEBUG] Backup created successfully: $backup_path" >&2
+        dialog --msgbox "Backup created successfully: $backup_path" 10 50
+    else
+        echo "[DEBUG] Backup creation failed." >&2
+        dialog --msgbox "Backup creation failed." 10 50
+    fi
 }
 
-# Fix view_backups function to properly list and manage backups
+# Add debugging to view_backups function
 view_backups() {
     local server_name="$1"
     local backup_dir="backups/$server_name"
+    echo "[DEBUG] Viewing backups in directory: $backup_dir" >&2
 
     if [ ! -d "$backup_dir" ]; then
+        echo "[DEBUG] Backup directory does not exist." >&2
         dialog --msgbox "No backups found for $server_name." 10 50
         return
     fi
 
     local backups=( $(ls "$backup_dir") )
+    echo "[DEBUG] Found backups: ${backups[@]}" >&2
     if [ ${#backups[@]} -eq 0 ]; then
         dialog --msgbox "No backups found for $server_name." 10 50
         return
     fi
 
     local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 $(for backup in "${backups[@]}"; do echo "$backup" "$backup"; done) 3>&1 1>&2 2>&3)
+    echo "[DEBUG] User selected backup: $backup_choice" >&2
     if [ -z "$backup_choice" ]; then
         return
     fi
@@ -184,20 +198,24 @@ view_backups() {
         "1" "Restore to this backup" \
         "2" "Rename this backup" \
         "3" "Delete this backup" 3>&1 1>&2 2>&3)
+    echo "[DEBUG] User selected action: $action" >&2
 
     case $action in
         1)
+            echo "[DEBUG] Restoring backup: $backup_dir/$backup_choice" >&2
             tar -xzf "$backup_dir/$backup_choice" -C .
             dialog --msgbox "Backup restored successfully." 10 50
             ;;
         2)
             local new_name=$(dialog --inputbox "Enter a new name for the backup:" 10 50 3>&1 1>&2 2>&3)
+            echo "[DEBUG] User entered new name: $new_name" >&2
             if [ -n "$new_name" ]; then
                 mv "$backup_dir/$backup_choice" "$backup_dir/$new_name"
                 dialog --msgbox "Backup renamed successfully." 10 50
             fi
             ;;
         3)
+            echo "[DEBUG] Deleting backup: $backup_dir/$backup_choice" >&2
             rm "$backup_dir/$backup_choice"
             dialog --msgbox "Backup deleted successfully." 10 50
             ;;
