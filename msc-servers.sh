@@ -169,8 +169,8 @@ create_backup() {
             sleep 0.05
         done
 
-        # Actual compression
-        tar -czf "$backup_path" "$server_name" 2>/dev/null
+        # Actual compression, excluding the backups folder
+        tar --exclude="$server_name/backups" -czf "$backup_path" "$server_name" 2>/dev/null
 
         echo "90"; echo "# Finalizing archive..."
         sleep 0.2
