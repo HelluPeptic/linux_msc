@@ -36,6 +36,14 @@ switch_to_java21() {
 EOF
 }
 
+# Function to switch to javac 21 if available
+switch_to_javac21() {
+    echo "Switching to javac 21..."
+    sudo update-alternatives --config javac <<EOF
+1
+EOF
+}
+
 # Function to install Java 21 manually from Adoptium
 install_java_21() {
     echo "Installing Java 21 manually..."
@@ -162,6 +170,9 @@ java -Xms1G -Xmx$RAM_ALLOCATION -jar $FOLIA_JAR nogui" > "$SERVER_DIR/start.sh"
 # Main script flow
 # Attempt to switch to Java 21 first
 switch_to_java21
+
+# Attempt to switch to javac 21 first
+switch_to_javac21
 
 # Now check if Java 21 is installed after switching
 if check_java_version; then

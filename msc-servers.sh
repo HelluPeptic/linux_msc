@@ -130,6 +130,18 @@ kill_server() {
     fi
 }
 
+# Function to view the latest log of a server
+view_latest_log() {
+    local server_name="$1"
+    local log_file="$server_name/logs/latest.log"
+
+    if [ -f "$log_file" ]; then
+        nano "$log_file"
+    else
+        dialog --msgbox "latest.log not found in $server_name/logs. Please ensure the server has been started at least once." 10 50
+    fi
+}
+
 # Main menu loop
 while true; do
     # Fetch all server directories that contain a start.sh file
