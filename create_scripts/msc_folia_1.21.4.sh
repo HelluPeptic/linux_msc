@@ -59,10 +59,10 @@ install_java_21() {
     sudo update-alternatives --install /usr/bin/java java /opt/jdk-21/bin/java 2
     sudo update-alternatives --install /usr/bin/javac javac /opt/jdk-21/bin/javac 2
 
-    echo "Java 21 installation completed and environment variables set."
-
     # Step 6: Clean up the downloaded folder
-    OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.2_13.tar.gz
+    rm -r OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.2_13.tar.gz
+
+    echo "Java 21 installation completed and environment variables set."
 }
 
 # Function to download the Minecraft server .jar file
