@@ -219,15 +219,15 @@ while true; do
         action=$(dialog --menu "Manage $full_server_name (Not Running):" 15 50 10 \
             "1" "Start Server" \
             "2" "Edit server.properties" \
-            "3" "Delete Server" \
-            "5" "View latest.log" \
+            "3" "View latest.log" \
+            "5" "Delete Server" \
             "4" "Exit Menu" 3>&1 1>&2 2>&3)
 
         case $action in
             1) start_server "$full_server_name" ;;  # Use full server name
             2) edit_properties "$full_server_name" ;;
-            3) delete_server "$full_server_name" ;;
-            5) view_latest_log "$full_server_name" ;;
+            3) view_latest_log "$full_server_name" ;;
+            5) delete_server "$full_server_name" ;;
             4) ;;
         esac
     fi
