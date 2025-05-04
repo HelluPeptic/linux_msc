@@ -231,13 +231,15 @@ while true; do
             "1" "Start Server" \
             "2" "Edit server.properties" \
             "3" "View latest.log" \
-            "4" "Delete Server" \
-            "5" "Exit Menu" 3>&1 1>&2 2>&3)
+            "4" "Manage Password" \
+            "5" "Delete Server" \
+            "6" "Exit Menu" 3>&1 1>&2 2>&3)
         case $action in
             1) start_server "$full_server_name" ;;
             2) edit_properties "$full_server_name" ;;
             3) view_latest_log "$full_server_name" ;;
-            4) delete_server "$full_server_name" ;;
+            4) manage_password "$full_server_name" ;;
+            5) delete_server "$full_server_name" ;;
         esac
     fi
 done
