@@ -126,11 +126,11 @@ restart_server() {
     dialog --yesno "Are you sure you want to restart the server $server_name?" 10 50
     if [ $? -eq 0 ]; then
         # Stop the server
-        echo "Stopping server $server_name..."
+        dialog --infobox "Stopping server $server_name..." 10 50
         screen -S "$server_name" -X stuff "stop$(printf \\r)"
 
         # Wait for the server to stop completely
-        echo "Waiting for the server to stop..."
+        dialog --infobox "Waiting for the server to stop..." 10 50
         while screen -list | grep -q "$server_name"; do
             sleep 1
         done
