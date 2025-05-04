@@ -127,7 +127,7 @@ restart_server() {
     if [ $? -eq 0 ]; then
         # Stop the server
         echo "Stopping server $server_name..."
-        screen -S "$server_name" -X stuff "stop$(printf \r)"
+        screen -S "$server_name" -X stuff "stop$(printf)"
 
         # Wait for the server to stop completely
         echo "Waiting for the server to stop..."
