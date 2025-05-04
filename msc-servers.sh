@@ -26,6 +26,44 @@ is_server_running() {
     fi
 }
 
+# Function to manage server password
+manage_password() {
+    local server_name="$1"
+    local password_file="$server_name/password.txt"
+
+    dialog --inputbox "Enter a new password for $server_name:" 10 50 2>temp_password.txt
+    if [ $? -eq 0 ]; then
+        local new_password=$(<temp_password.txt)
+        echo "$new_password" > "$password_file"
+        dialog --msgbox "Password updated successfully for $server_name." 10 50
+    fi
+    rm -f temp_password.txt
+
+    # Ensure password.txt is hidden
+    if [ -f "$password_file" ]; then
+        chmod 600 "$password_file"
+    fi
+}
+
+# Function to check server password
+check_password() {
+    local server_name="$1"
+    local password_file="$server_name/password.txt"
+
+    if [ -f "$password_file" ]; then
+        dialog --passwordbox "Enter the password for $server_name:" 10 50 2>temp_password.txt
+        local entered_password=$(<temp_password.txt)
+        local stored_password=$(<"$password_file")
+        rm -f temp_password.txt
+
+        if [ "$entered_password" != "$stored_password" ]; then
+            dialog --msgbox "Incorrect password. Access denied." 10 50
+            return 1
+        fi
+    fi
+    return 0
+}
+
 # Start server
 start_server() {
     local full_server_name="$1"
