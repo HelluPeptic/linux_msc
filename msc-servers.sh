@@ -26,22 +26,6 @@ is_server_running() {
     fi
 }
 
-# Function to show server info
-show_server_info() {
-    local server="$1"
-    local info=""
-
-    if [ -f "$server/server.properties" ]; then
-        motd=$(grep -i '^motd=' "$server/server.properties" | cut -d= -f2-)
-        info+="MOTD: $motd\n"
-    fi
-
-    size=$(du -sh "$server" | cut -f1)
-    info+="Size: $size"
-
-    dialog --title "$server Info" --msgbox "$info" 10 50
-}
-
 # Start server
 start_server() {
     local full_server_name="$1"
@@ -118,7 +102,7 @@ restart_server() {
             echo 'Server closed.'
         "
         sleep 2
-        dialog --msgbox "🔄 Server $server_name restarted." 10 50
+        dialog --msgbox "Server $server_name restarted." 10 50
     fi
 }
 
@@ -128,7 +112,7 @@ kill_server() {
     dialog --yesno "Force kill $server_name?" 10 50
     if [ $? -eq 0 ]; then
         screen -S "$server_name" -X quit
-        dialog --msgbox "💀 Server $server_name forcefully killed." 10 50
+        dialog --msgbox "Server $server_name forcefully killed." 10 50
     fi
 }
 
@@ -178,26 +162,14 @@ while true; do
         status=$(is_server_running "$server")
         emoji="🔴"
         [ "$status" == "Running" ] && emoji="🟢"
-        [ "$status" == "Shutting Down" ] && emoji="🟡"
         menu_items+=("$server" "$emoji $status")
     done
-
-    menu_items+=("INFO" "📋 Show server info")
-    menu_items+=("EXIT" "❌ Exit")
 
     selected_server=$(dialog --menu "Select a server to manage:" 20 60 15 "${menu_items[@]}" 3>&1 1>&2 2>&3)
 
     if [ -z "$selected_server" ] || [ "$selected_server" == "EXIT" ]; then
         clear
         exit 0
-    fi
-
-    if [ "$selected_server" == "INFO" ]; then
-        server_to_preview=$(dialog --menu "Select server to view info:" 20 60 15 "${server_dirs[@]/%/ Select}" 3>&1 1>&2 2>&3)
-        if [ -n "$server_to_preview" ]; then
-            show_server_info "$server_to_preview"
-        fi
-        continue
     fi
 
     full_server_name="$selected_server"
@@ -215,7 +187,7 @@ while true; do
             3) kill_server "$full_server_name" ;;
         esac
     elif [ "$status" == "Shutting Down" ]; then
-        dialog --msgbox "⚠️ Server $full_server_name is shutting down. Please wait." 10 50
+        dialog --msgbox "Server $full_server_name is shutting down. Please wait." 10 50
     else
         action=$(dialog --menu "Manage $full_server_name (🔴 Stopped):" 15 50 10 \
             "1" "Start Server" \
