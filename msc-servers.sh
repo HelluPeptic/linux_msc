@@ -39,17 +39,16 @@ manage_password() {
     fi
     rm -f temp_password.txt
 
-    # Ensure password.txt is hidden and inaccessible to others
+    # Ensure password.txt is hidden
     if [ -f "$password_file" ]; then
-        mv "$password_file" "$server_name/.password.txt"
-        chmod 600 "$server_name/.password.txt"
+        chmod 600 "$password_file"
     fi
 }
 
 # Function to check server password
 check_password() {
     local server_name="$1"
-    local password_file="$server_name/.password.txt"
+    local password_file="$server_name/password.txt"
 
     if [ -f "$password_file" ]; then
         dialog --passwordbox "Enter the password for $server_name:" 10 50 2>temp_password.txt
@@ -212,7 +211,12 @@ while true; do
     fi
 
     full_server_name="$selected_server"
-    status=$(is_server_running("$full_server_name")
+    status=$(is_server_running "$full_server_name")
+
+    # 🔐 Password check before managing the server
+    if ! check_password "$full_server_name"; then
+        continue  # Skip to next loop if password fails
+    fi
 
     if [ "$status" == "Running" ]; then
         action=$(dialog --menu "Manage $full_server_name (🟢 Running):" 15 50 10 \
