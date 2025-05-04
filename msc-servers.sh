@@ -51,7 +51,7 @@ check_password() {
     local password_file="$server_name/password.txt"
 
     if [ -f "$password_file" ]; then
-        dialog --passwordbox "Enter the password for $server_name:" 10 50 2>temp_password.txt
+        dialog --insecure --passwordbox "Enter the password for $server_name:" 10 50 2>temp_password.txt
         local entered_password=$(<temp_password.txt)
         local stored_password=$(<"$password_file")
         rm -f temp_password.txt
