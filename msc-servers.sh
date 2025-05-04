@@ -165,7 +165,7 @@ while true; do
         menu_items+=("$server" "$emoji $status")
     done
 
-    selected_server=$(dialog --menu "Select a server to manage:" 20 60 15 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    selected_server=$(dialog --menu "Select a server to manage:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
 
     if [ -z "$selected_server" ] || [ "$selected_server" == "EXIT" ]; then
         clear
