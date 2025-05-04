@@ -129,13 +129,15 @@ restart_server() {
         echo "Stopping server $server_name..."
         screen -S "$server_name" -X stuff "stop$(printf \r)"
 
-        # Wait for the server to stop
+        # Wait for the server to stop completely
+        echo "Waiting for the server to stop..."
         while screen -list | grep -q "$server_name"; do
             sleep 1
         done
 
+        echo "Server $server_name stopped. Starting it again..."
+
         # Start the server again
-        echo "Starting server $server_name..."
         screen -dmS "$server_name" bash -c "
             cd $server_name && bash start.sh;
             echo 'Server closed.';
