@@ -120,6 +120,31 @@ stop_server() {
     fi
 }
 
+# Function to restart a running server
+restart_server() {
+    local server_name="$1"
+    dialog --yesno "Are you sure you want to restart the server $server_name?" 10 50
+    if [ $? -eq 0 ]; then
+        # Stop the server
+        echo "Stopping server $server_name..."
+        screen -S "$server_name" -X stuff "stop$(printf \r)"
+
+        # Wait for the server to stop
+        while screen -list | grep -q "$server_name"; do
+            sleep 1
+        done
+
+        # Start the server again
+        echo "Starting server $server_name..."
+        screen -dmS "$server_name" bash -c "
+            cd $server_name && bash start.sh;
+            echo 'Server closed.';
+        "
+
+        dialog --msgbox "Server $server_name restarted successfully." 10 50
+    fi
+}
+
 # Function to kill a running server
 kill_server() {
     local server_name="$1"
@@ -202,13 +227,13 @@ while true; do
     if [ "$status" == "Running" ]; then
         action=$(dialog --menu "Manage $full_server_name (Running):" 15 50 10 \
             "1" "View Console" \
-            "2" "Stop Server" \
+            "2" "Restart Server" \
             "3" "Kill Server" \
             "4" "Exit Menu" 3>&1 1>&2 2>&3)
 
         case $action in
             1) view_console "$full_server_name" ;;
-            2) stop_server "$full_server_name" ;;  # Update status dynamically
+            2) restart_server "$full_server_name" ;;  # Update status dynamically
             3) kill_server "$full_server_name" ;;
             4) ;;
         esac
