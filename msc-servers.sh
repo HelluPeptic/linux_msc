@@ -27,28 +27,37 @@ is_server_running() {
 }
 
 # Function to manage server password
+# Function to manage server password
 manage_password() {
     local server_name="$1"
-    local password_file="$server_name/password.txt"
+    local password_dir="./.passwords"
+    local password_file="$password_dir/$server_name.password.txt"
 
+    # Ensure the password directory exists
+    mkdir -p "$password_dir"
+
+    # Ask for the new password
     dialog --inputbox "Enter a new password for $server_name:" 10 50 2>temp_password.txt
     if [ $? -eq 0 ]; then
         local new_password=$(<temp_password.txt)
+
+        # Save the password in the hidden directory
         echo "$new_password" > "$password_file"
         dialog --msgbox "Password updated successfully for $server_name." 10 50
     fi
     rm -f temp_password.txt
 
-    # Ensure password.txt is hidden
+    # Ensure password.txt is hidden and has secure permissions
     if [ -f "$password_file" ]; then
-        chmod 600 "$password_file"
+        chmod 600 "$password_file"  # Only the owner can read/write
     fi
 }
 
 # Function to check server password
 check_password() {
     local server_name="$1"
-    local password_file="$server_name/password.txt"
+    local password_dir="./.passwords"
+    local password_file="$password_dir/$server_name.password.txt"
 
     if [ -f "$password_file" ]; then
         dialog --insecure --passwordbox "Enter the password for $server_name:" 10 50 2>temp_password.txt
