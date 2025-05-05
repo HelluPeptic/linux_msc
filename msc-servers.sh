@@ -188,9 +188,11 @@ manage_remote_access() {
             ;;
         3)  # View connection info
             if [ "$ngrok_running" = true ]; then
-                local ngrok_info=$(curl -s http://127.0.0.1:4040/api/tunnels | grep -oE 'tcp://[^"]+')
+                local ngrok_info=$(curl -s http://127.0.0.1:4040/api/tunnels | grep -oE 'tcp://[^:]+:[0-9]+')
                 if [ -n "$ngrok_info" ]; then
-                    local ssh_command="ssh mc@${ngrok_info#tcp://}"
+                    local host=$(echo "$ngrok_info" | cut -d':' -f2 | tr -d '/')
+                    local port=$(echo "$ngrok_info" | cut -d':' -f3)
+                    local ssh_command="ssh pi@$host -p $port"
                     dialog --msgbox "Use the following command to connect to the server:\n$ssh_command" 10 50
                 else
                     dialog --msgbox "Unable to retrieve connection info. Please try again." 10 50
