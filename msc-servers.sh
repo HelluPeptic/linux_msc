@@ -27,7 +27,6 @@ is_server_running() {
 }
 
 # Function to manage server password
-# Function to manage server password
 manage_password() {
     local server_name="$1"
     local password_dir="./.passwords"
