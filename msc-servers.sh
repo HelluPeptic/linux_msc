@@ -192,7 +192,8 @@ manage_remote_access() {
                 if [ -n "$ngrok_info" ]; then
                     local host=$(echo "$ngrok_info" | cut -d':' -f2 | tr -d '/')
                     local port=$(echo "$ngrok_info" | cut -d':' -f3)
-                    local ssh_command="ssh pi@$host -p $port"
+                    local username=$(whoami)  # Dynamically fetch the username
+                    local ssh_command="ssh $username@$host -p $port"
                     dialog --msgbox "Use the following command to connect to the server:\n$ssh_command" 10 50
                 else
                     dialog --msgbox "Unable to retrieve connection info. Please try again." 10 50
