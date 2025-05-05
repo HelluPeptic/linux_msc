@@ -128,6 +128,56 @@ view_latest_log() {
     fi
 }
 
+# Function to manage remote access
+manage_remote_access() {
+    local server_name="$1"
+    local ssh_keys_file="./.ssh_keys/$server_name.keys"
+    mkdir -p "./.ssh_keys"  # Ensure the directory exists
+
+    local action=$(dialog --menu "Remote Access for $server_name:" 15 50 10 \
+        "1" "Add new user" \
+        "2" "Open port" \
+        "3" "View connection info" 3>&1 1>&2 2>&3)
+
+    case $action in
+        1)  # Add new user
+            local ssh_key=$(dialog --inputbox "Paste the SSH key to add:" 10 50 3>&1 1>&2 2>&3)
+            if [ -n "$ssh_key" ]; then
+                echo "$ssh_key" >> "$ssh_keys_file"
+                dialog --msgbox "SSH key added successfully." 10 50
+            else
+                dialog --msgbox "No SSH key provided. Operation canceled." 10 50
+            fi
+            ;;
+        2)  # Open port
+            if ! command -v ngrok &> /dev/null; then
+                dialog --msgbox "ngrok is not installed. Installing now..." 10 50
+                sudo apt update && sudo apt install -y ngrok
+                local auth_token=$(dialog --inputbox "Enter your ngrok auth token:" 10 50 3>&1 1>&2 2>&3)
+                if [ -n "$auth_token" ]; then
+                    ngrok config add-authtoken "$auth_token"
+                else
+                    dialog --msgbox "No auth token provided. Operation canceled." 10 50
+                    return
+                fi
+            fi
+
+            dialog --msgbox "Opening ngrok port..." 10 50
+            screen -dmS ngrok ngrok tcp 22
+            dialog --msgbox "ngrok is now running in a screen session named 'ngrok'." 10 50
+            ;;
+        3)  # View connection info
+            local ngrok_info=$(curl -s http://127.0.0.1:4040/api/tunnels | grep -oE 'tcp://[^"]+')
+            if [ -n "$ngrok_info" ]; then
+                local ssh_command="ssh mc@${ngrok_info#tcp://}"
+                dialog --msgbox "Use the following command to connect to the server:\n$ssh_command" 10 50
+            else
+                dialog --msgbox "No active ngrok session found. Please open a port first." 10 50
+            fi
+            ;;
+    esac
+}
+
 # Main menu loop
 while true; do
     server_dirs=()
@@ -180,11 +230,13 @@ while true; do
             "1" "View Console" \
             "2" "Restart Server" \
             "3" "Kill Server" \
-            "4" "Exit Menu" 3>&1 1>&2 2>&3)
+            "4" "Remote Access" \
+            "5" "Exit Menu" 3>&1 1>&2 2>&3)
         case $action in
             1) view_console "$full_server_name" ;;
             2) restart_server "$full_server_name" ;;
             3) kill_server "$full_server_name" ;;
+            4) manage_remote_access "$full_server_name" ;;
         esac
     elif [ "$status" == "Shutting Down" ]; then
         dialog --msgbox "Server $full_server_name is shutting down. Please wait." 10 50
@@ -194,12 +246,14 @@ while true; do
             "2" "Edit server.properties" \
             "3" "View latest.log" \
             "4" "Delete Server" \
-            "5" "Exit Menu" 3>&1 1>&2 2>&3)
+            "5" "Remote Access" \
+            "6" "Exit Menu" 3>&1 1>&2 2>&3)
         case $action in
             1) start_server "$full_server_name" ;;
             2) edit_properties "$full_server_name" ;;
             3) view_latest_log "$full_server_name" ;;
             4) delete_server "$full_server_name" ;;
+            5) manage_remote_access "$full_server_name" ;;
         esac
     fi
 done
