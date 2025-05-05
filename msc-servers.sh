@@ -166,7 +166,7 @@ manage_remote_access() {
             ;;
         2)  # Open or close port
             if [ "$ngrok_running" = true ]; then
-                kill "$ngrok_pid"
+                screen -S ngrok -X quit  # Shut down the screen session running ngrok
                 dialog --msgbox "ngrok port closed successfully." 10 50
             else
                 if ! command -v ngrok &> /dev/null; then
