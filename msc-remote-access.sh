@@ -39,6 +39,7 @@ manage_remote_access() {
             if [ "$ngrok_running" = true ]; then
                 screen -S ngrok -X quit  # Shut down the screen session running ngrok
                 dialog --msgbox "ngrok port closed successfully." 10 50
+                bash msc  # Return to the main menu
             else
                 if ! command -v ngrok &> /dev/null; then
                     dialog --msgbox "ngrok is not installed. Installing now..." 10 50
@@ -52,9 +53,9 @@ manage_remote_access() {
                     fi
                 fi
 
-                dialog --msgbox "Opening ngrok port..." 10 50
                 screen -dmS ngrok ngrok tcp 22
                 dialog --msgbox "ngrok is now running in a screen session named 'ngrok'." 10 50
+                bash msc  # Return to the main menu
             fi
             ;;
         3)  # View connection info
