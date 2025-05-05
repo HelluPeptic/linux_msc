@@ -21,8 +21,8 @@ show_menu() {
             bash msc-create.sh
             ;;
         3)
-            # Run the remote access management function
-            bash msc-servers.sh --remote-access
+            # Run the global remote access management function
+            bash msc-remote-access.sh
             ;;
         *)
             # If cancelled or closed, do nothing
