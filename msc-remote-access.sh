@@ -26,11 +26,13 @@ setup_password() {
             exit 0
         fi
         if [ "$entered_password" == "$(cat $password_file)" ]; then
-            return  # Exit the function and proceed to the remote access menu
+            break  # Exit the loop and proceed to the remote access menu
         else
             dialog --msgbox "Incorrect password. Please try again." 10 50
         fi
     done
+
+    manage_remote_access  # Proceed to the remote access menu after successful password entry
 }
 
 # Ensure cancel button in dialog menus returns to the main menu
