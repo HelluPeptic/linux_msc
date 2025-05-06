@@ -87,12 +87,14 @@ manage_remote_access() {
             action=$(dialog --cancel-label "Cancel" --menu "Global Remote Access:" 15 50 10 \
                 "1" "Add new user" \
                 "2" "Close port" \
-                "3" "View connection info" 3>&1 1>&2 2>&3)
+                "3" "View connection info" \
+                "4" "Show Tutorial" 3>&1 1>&2 2>&3)
         else
             action=$(dialog --cancel-label "Cancel" --menu "Global Remote Access:" 15 50 10 \
                 "1" "Add new user" \
                 "2" "Open port" \
-                "3" "View connection info" 3>&1 1>&2 2>&3)
+                "3" "View connection info" \
+                "4" "Show Tutorial" 3>&1 1>&2 2>&3)
         fi
 
         if [ $? -ne 0 ]; then
@@ -170,6 +172,7 @@ manage_remote_access() {
                 fi
                 manage_remote_access  # Return to the remote access menu
                 ;;
+            4) show_tutorial ;;
         esac
     done
 }
