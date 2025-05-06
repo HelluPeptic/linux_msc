@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Update password and SSH key prompts to handle cancel button
+# Update dialog prompts to ensure proper navigation between "Done" and "Cancel"
 setup_password() {
     local password_file="./.ssh_keys/access_password.txt"
 
@@ -62,9 +62,7 @@ manage_remote_access() {
 
     case $action in
         1)  # Add new user
-            echo "Paste the SSH key below and press Enter when done (Ctrl+D to finish):"
-            local ssh_key
-            ssh_key=$(cat)  # Allow multi-line input for SSH key
+            ssh_key=$(dialog --inputbox "Paste the SSH key below:" 15 50 3>&1 1>&2 2>&3)
             if [ $? -ne 0 ]; then
                 manage_remote_access  # Return to the remote access menu if canceled
                 return
