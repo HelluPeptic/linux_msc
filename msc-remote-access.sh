@@ -20,34 +20,40 @@ type %USERPROFILE%\\.ssh\\id_ed25519.pub" 10 50
     fi
 }
 
+# Cache the password for the session
+cached_password=""
+
 # Update dialog prompts to ensure proper navigation between "Done" and "Cancel"
 setup_password() {
     local password_file="./.passwords/access_password.txt"
 
-    if [ ! -f "$password_file" ]; then
-        local password=$(dialog --insecure --passwordbox "Set a password for Remote Access:" 10 50 3>&1 1>&2 2>&3)
+    if [ -z "$cached_password" ]; then
+        if [ ! -f "$password_file" ]; then
+            local password=$(dialog --insecure --passwordbox "Set a password for Remote Access:" 10 50 3>&1 1>&2 2>&3)
+            if [ $? -ne 0 ]; then
+                bash msc  # Return to the main menu if canceled
+                exit 0
+            fi
+            if [ -z "$password" ]; then
+                dialog --msgbox "Password setup canceled. Returning to the main menu." 10 50
+                bash msc
+                exit 0
+            fi
+            echo "$password" > "$password_file"
+            dialog --msgbox "Password set successfully." 10 50
+        fi
+
+        local entered_password=$(dialog --insecure --passwordbox "Enter the Remote Access password:" 10 50 3>&1 1>&2 2>&3)
         if [ $? -ne 0 ]; then
             bash msc  # Return to the main menu if canceled
             exit 0
         fi
-        if [ -z "$password" ]; then
-            dialog --msgbox "Password setup canceled. Returning to the main menu." 10 50
+        if [ "$entered_password" != "$(cat $password_file)" ]; then
+            dialog --msgbox "Incorrect password. Returning to the main menu." 10 50
             bash msc
             exit 0
         fi
-        echo "$password" > "$password_file"
-        dialog --msgbox "Password set successfully." 10 50
-    fi
-
-    local entered_password=$(dialog --insecure --passwordbox "Enter the Remote Access password:" 10 50 3>&1 1>&2 2>&3)
-    if [ $? -ne 0 ]; then
-        bash msc  # Return to the main menu if canceled
-        exit 0
-    fi
-    if [ "$entered_password" != "$(cat $password_file)" ]; then
-        dialog --msgbox "Incorrect password. Returning to the main menu." 10 50
-        bash msc
-        exit 0
+        cached_password="$entered_password"
     fi
 }
 
