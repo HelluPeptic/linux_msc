@@ -136,18 +136,17 @@ manage_remote_access() {
                     if ! command -v ngrok &> /dev/null; then
                         dialog --msgbox "ngrok is not installed. Installing now..." 10 50
                         sudo apt update && sudo apt install -y ngrok
-                        local auth_token=$(dialog --inputbox "Enter your ngrok auth token:" 10 50 3>&1 1>&2 2>&3)
-                        if [ $? -ne 0 ]; then
-                            manage_remote_access  # Return to the remote access menu if canceled
+                        echo "Paste your ngrok auth token below and press Enter when done (Ctrl+D to finish):"
+                        local auth_token
+                        auth_token=$(cat)  # Allow multi-line input for the auth token
+                        if [ -z "$auth_token" ]; then
+                            echo "No auth token provided. Returning to the main menu."
+                            bash msc  # Return to the main menu
                             return
                         fi
-                        if [ -n "$auth_token" ]; then
-                            ngrok config add-authtoken "$auth_token"
-                        else
-                            dialog --msgbox "No auth token provided. Operation canceled." 10 50
-                            manage_remote_access  # Return to the remote access menu
-                            return
-                        fi
+
+                        ngrok config add-authtoken "$auth_token"
+                        dialog --msgbox "Auth token added successfully." 10 50
                     fi
 
                     screen -dmS ngrok ngrok tcp 22
