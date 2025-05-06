@@ -20,6 +20,16 @@ type %USERPROFILE%\\.ssh\\id_ed25519.pub" 10 50
     fi
 }
 
+# Function to track if the tutorial has been shown
+track_tutorial() {
+    local tutorial_flag="./.tutorial_shown"
+
+    if [ ! -f "$tutorial_flag" ]; then
+        show_tutorial
+        touch "$tutorial_flag"
+    fi
+}
+
 # Cache the password for the session
 cached_password=""
 
@@ -165,5 +175,5 @@ manage_remote_access() {
 }
 
 # Main execution
-show_tutorial
+track_tutorial
 manage_remote_access
