@@ -125,8 +125,8 @@ manage_remote_access() {
                 chmod 600 "$authorized_keys_file"
                 echo "$ssh_key" >> "$authorized_keys_file"
 
-                echo "SSH key added successfully to authorized_keys. Returning to the main menu."
-                bash msc  # Return to the main menu
+                dialog --msgbox "SSH key added successfully to authorized_keys." 10 50
+                manage_remote_access  # Return to the remote access menu
                 ;;
             2)  # Open or close port
                 if [ "$ngrok_running" = true ]; then
@@ -134,8 +134,8 @@ manage_remote_access() {
                     dialog --msgbox "ngrok port closed successfully." 10 50
                 else
                     if ! command -v ngrok &> /dev/null; then
-                        dialog --msgbox "ngrok is not installed. Installing now..." 10 50
-                        sudo apt update && sudo apt install -y ngrok
+                        echo "ngrok is not installed. Installing now..."
+                        sudo apt update -y && sudo apt install -y ngrok
                         echo "Paste your ngrok auth token below and press Enter when done (Ctrl+D to finish):"
                         local auth_token
                         auth_token=$(cat)  # Allow multi-line input for the auth token
@@ -151,6 +151,7 @@ manage_remote_access() {
 
                     screen -dmS ngrok ngrok tcp 22
                     dialog --msgbox "ngrok is now running in a screen session named 'ngrok'." 10 50
+                    manage_remote_access  # Return to the remote access menu
                 fi
                 manage_remote_access  # Return to the remote access menu
                 ;;
