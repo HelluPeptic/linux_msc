@@ -48,7 +48,7 @@ manage_remote_access() {
     while true; do
         local action
         if [ "$ngrok_running" = true ]; then
-            action=$(dialog --cancel-label "Back to Main Menu" --menu "Global Remote Access:" 15 50 10 \
+            action=$(dialog --cancel-label "Cancel" --menu "Global Remote Access:" 15 50 10 \
                 "1" "Add new user" \
                 "2" "Close port" \
                 "3" "View connection info" \
