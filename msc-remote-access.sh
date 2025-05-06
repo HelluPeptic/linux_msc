@@ -54,7 +54,9 @@ manage_remote_access() {
 
     case $action in
         1)  # Add new user
-            local ssh_key=$(dialog --inputbox "Paste the SSH key to add:" 10 50 3>&1 1>&2 2>&3)
+            echo "Paste the SSH key below and press Enter when done (Ctrl+D to finish):"
+            local ssh_key
+            ssh_key=$(cat)  # Allow multi-line input for SSH key
             if [ -n "$ssh_key" ]; then
                 echo "$ssh_key" >> "$ssh_keys_file"
                 dialog --msgbox "SSH key added successfully." 10 50
