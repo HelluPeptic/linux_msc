@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Fix password verification to properly enter the remote access menu
+# Ensure successful password entry transitions to the remote access menu
 setup_password() {
     local password_file="./.ssh_keys/access_password.txt"
 
@@ -26,7 +26,7 @@ setup_password() {
             exit 0
         fi
         if [ "$entered_password" == "$(cat $password_file)" ]; then
-            break  # Exit the loop and proceed to the remote access menu
+            return  # Exit the function and proceed to the remote access menu
         else
             dialog --msgbox "Incorrect password. Please try again." 10 50
         fi
