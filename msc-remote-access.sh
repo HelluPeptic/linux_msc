@@ -1,11 +1,15 @@
 #!/bin/bash
 
-# Add password protection for the first-time use of remote access
+# Update password and SSH key prompts to handle cancel button
 setup_password() {
     local password_file="./.ssh_keys/access_password.txt"
 
     if [ ! -f "$password_file" ]; then
         local password=$(dialog --insecure --passwordbox "Set a password for Remote Access:" 10 50 3>&1 1>&2 2>&3)
+        if [ $? -ne 0 ]; then
+            bash msc  # Return to the main menu if canceled
+            exit 0
+        fi
         if [ -z "$password" ]; then
             dialog --msgbox "Password setup canceled. Returning to the main menu." 10 50
             bash msc
@@ -16,6 +20,10 @@ setup_password() {
     fi
 
     local entered_password=$(dialog --insecure --passwordbox "Enter the Remote Access password:" 10 50 3>&1 1>&2 2>&3)
+    if [ $? -ne 0 ]; then
+        bash msc  # Return to the main menu if canceled
+        exit 0
+    fi
     if [ "$entered_password" != "$(cat $password_file)" ]; then
         dialog --msgbox "Incorrect password. Returning to the main menu." 10 50
         bash msc
@@ -57,6 +65,10 @@ manage_remote_access() {
             echo "Paste the SSH key below and press Enter when done (Ctrl+D to finish):"
             local ssh_key
             ssh_key=$(cat)  # Allow multi-line input for SSH key
+            if [ $? -ne 0 ]; then
+                manage_remote_access  # Return to the remote access menu if canceled
+                return
+            fi
             if [ -n "$ssh_key" ]; then
                 echo "$ssh_key" >> "$ssh_keys_file"
                 dialog --msgbox "SSH key added successfully." 10 50
@@ -74,6 +86,10 @@ manage_remote_access() {
                     dialog --msgbox "ngrok is not installed. Installing now..." 10 50
                     sudo apt update && sudo apt install -y ngrok
                     local auth_token=$(dialog --inputbox "Enter your ngrok auth token:" 10 50 3>&1 1>&2 2>&3)
+                    if [ $? -ne 0 ]; then
+                        manage_remote_access  # Return to the remote access menu if canceled
+                        return
+                    fi
                     if [ -n "$auth_token" ]; then
                         ngrok config add-authtoken "$auth_token"
                     else
