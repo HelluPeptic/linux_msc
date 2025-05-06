@@ -62,28 +62,28 @@ manage_remote_access() {
 
     case $action in
         1)  # Add new user
-            ssh_key=$(dialog --inputbox "Paste the SSH key below:" 15 50 3>&1 1>&2 2>&3)
-            if [ $? -ne 0 ]; then
-                manage_remote_access  # Return to the remote access menu if canceled
+            echo "Paste the SSH key below and press Enter when done (Ctrl+D to finish):"
+            local ssh_key
+            ssh_key=$(cat)  # Allow multi-line input for SSH key
+            if [ -z "$ssh_key" ]; then
+                echo "No SSH key provided. Returning to the main menu."
+                bash msc  # Return to the main menu
                 return
             fi
-            if [ -n "$ssh_key" ]; then
-                echo "$ssh_key" >> "$ssh_keys_file"
 
-                # Append the SSH key to the authorized_keys file
-                local ssh_dir="$HOME/.ssh"
-                local authorized_keys_file="$ssh_dir/authorized_keys"
-                mkdir -p "$ssh_dir"
-                touch "$authorized_keys_file"
-                chmod 700 "$ssh_dir"
-                chmod 600 "$authorized_keys_file"
-                echo "$ssh_key" >> "$authorized_keys_file"
+            echo "$ssh_key" >> "$ssh_keys_file"
 
-                dialog --msgbox "SSH key added successfully to authorized_keys." 10 50
-            else
-                dialog --msgbox "No SSH key provided. Operation canceled." 10 50
-            fi
-            manage_remote_access  # Return to the remote access menu
+            # Append the SSH key to the authorized_keys file
+            local ssh_dir="$HOME/.ssh"
+            local authorized_keys_file="$ssh_dir/authorized_keys"
+            mkdir -p "$ssh_dir"
+            touch "$authorized_keys_file"
+            chmod 700 "$ssh_dir"
+            chmod 600 "$authorized_keys_file"
+            echo "$ssh_key" >> "$authorized_keys_file"
+
+            echo "SSH key added successfully to authorized_keys. Returning to the main menu."
+            bash msc  # Return to the main menu
             ;;
         2)  # Open or close port
             if [ "$ngrok_running" = true ]; then
