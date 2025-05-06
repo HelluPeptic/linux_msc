@@ -31,7 +31,7 @@ setup_password() {
     fi
 }
 
-# Ensure cancel button in dialog menus returns to the main menu
+# Ensure cancel in global access menu goes back to main msc and exits properly
 manage_remote_access() {
     setup_password  # Ensure password is set and verified
 
@@ -48,21 +48,20 @@ manage_remote_access() {
     while true; do
         local action
         if [ "$ngrok_running" = true ]; then
-            action=$(dialog --cancel-label "Cancel" --menu "Global Remote Access:" 15 50 10 \
+            action=$(dialog --cancel-label "Back to Main Menu" --menu "Global Remote Access:" 15 50 10 \
                 "1" "Add new user" \
                 "2" "Close port" \
-                "3" "View connection info" \
-                "4" "Back to Main Menu" 3>&1 1>&2 2>&3)
+                "3" "View connection info" 3>&1 1>&2 2>&3)
         else
-            action=$(dialog --cancel-label "Cancel" --menu "Global Remote Access:" 15 50 10 \
+            action=$(dialog --cancel-label "Back to Main Menu" --menu "Global Remote Access:" 15 50 10 \
                 "1" "Add new user" \
                 "2" "Open port" \
-                "3" "View connection info" \
-                "4" "Back to Main Menu" 3>&1 1>&2 2>&3)
+                "3" "View connection info" 3>&1 1>&2 2>&3)
         fi
 
         if [ $? -ne 0 ]; then
-            bash msc  # Return to the main menu if canceled
+            # Exit the global access menu and return to main msc
+            bash msc
             exit 0
         fi
 
@@ -134,9 +133,6 @@ manage_remote_access() {
                     dialog --msgbox "No active ngrok session found. Please open a port first." 10 50
                 fi
                 manage_remote_access  # Return to the remote access menu
-                ;;
-            4)  # Back to Main Menu
-                bash msc
                 ;;
         esac
     done
