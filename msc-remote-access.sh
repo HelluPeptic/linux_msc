@@ -31,7 +31,7 @@ setup_password() {
     fi
 }
 
-# Function to manage remote access
+# Ensure cancel button in dialog menus returns to the main menu
 manage_remote_access() {
     setup_password  # Ensure password is set and verified
 
@@ -45,94 +45,101 @@ manage_remote_access() {
         ngrok_running=true
     fi
 
-    local action
-    if [ "$ngrok_running" = true ]; then
-        action=$(dialog --menu "Global Remote Access:" 15 50 10 \
-            "1" "Add new user" \
-            "2" "Close port" \
-            "3" "View connection info" \
-            "4" "Back to Main Menu" 3>&1 1>&2 2>&3)
-    else
-        action=$(dialog --menu "Global Remote Access:" 15 50 10 \
-            "1" "Add new user" \
-            "2" "Open port" \
-            "3" "View connection info" \
-            "4" "Back to Main Menu" 3>&1 1>&2 2>&3)
-    fi
+    while true; do
+        local action
+        if [ "$ngrok_running" = true ]; then
+            action=$(dialog --cancel-label "Back to Main Menu" --menu "Global Remote Access:" 15 50 10 \
+                "1" "Add new user" \
+                "2" "Close port" \
+                "3" "View connection info" \
+                "4" "Back to Main Menu" 3>&1 1>&2 2>&3)
+        else
+            action=$(dialog --cancel-label "Back to Main Menu" --menu "Global Remote Access:" 15 50 10 \
+                "1" "Add new user" \
+                "2" "Open port" \
+                "3" "View connection info" \
+                "4" "Back to Main Menu" 3>&1 1>&2 2>&3)
+        fi
 
-    case $action in
-        1)  # Add new user
-            echo "Paste the SSH key below and press Enter when done (Ctrl+D to finish):"
-            local ssh_key
-            ssh_key=$(cat)  # Allow multi-line input for SSH key
-            if [ -z "$ssh_key" ]; then
-                echo "No SSH key provided. Returning to the main menu."
+        if [ $? -ne 0 ]; then
+            bash msc  # Return to the main menu if canceled
+            exit 0
+        fi
+
+        case $action in
+            1)  # Add new user
+                echo "Paste the SSH key below and press Enter when done (Ctrl+D to finish):"
+                local ssh_key
+                ssh_key=$(cat)  # Allow multi-line input for SSH key
+                if [ -z "$ssh_key" ]; then
+                    echo "No SSH key provided. Returning to the main menu."
+                    bash msc  # Return to the main menu
+                    return
+                fi
+
+                echo "$ssh_key" >> "$ssh_keys_file"
+
+                # Append the SSH key to the authorized_keys file
+                local ssh_dir="$HOME/.ssh"
+                local authorized_keys_file="$ssh_dir/authorized_keys"
+                mkdir -p "$ssh_dir"
+                touch "$authorized_keys_file"
+                chmod 700 "$ssh_dir"
+                chmod 600 "$authorized_keys_file"
+                echo "$ssh_key" >> "$authorized_keys_file"
+
+                echo "SSH key added successfully to authorized_keys. Returning to the main menu."
                 bash msc  # Return to the main menu
-                return
-            fi
-
-            echo "$ssh_key" >> "$ssh_keys_file"
-
-            # Append the SSH key to the authorized_keys file
-            local ssh_dir="$HOME/.ssh"
-            local authorized_keys_file="$ssh_dir/authorized_keys"
-            mkdir -p "$ssh_dir"
-            touch "$authorized_keys_file"
-            chmod 700 "$ssh_dir"
-            chmod 600 "$authorized_keys_file"
-            echo "$ssh_key" >> "$authorized_keys_file"
-
-            echo "SSH key added successfully to authorized_keys. Returning to the main menu."
-            bash msc  # Return to the main menu
-            ;;
-        2)  # Open or close port
-            if [ "$ngrok_running" = true ]; then
-                screen -S ngrok -X quit  # Shut down the screen session running ngrok
-                dialog --msgbox "ngrok port closed successfully." 10 50
-            else
-                if ! command -v ngrok &> /dev/null; then
-                    dialog --msgbox "ngrok is not installed. Installing now..." 10 50
-                    sudo apt update && sudo apt install -y ngrok
-                    local auth_token=$(dialog --inputbox "Enter your ngrok auth token:" 10 50 3>&1 1>&2 2>&3)
-                    if [ $? -ne 0 ]; then
-                        manage_remote_access  # Return to the remote access menu if canceled
-                        return
-                    fi
-                    if [ -n "$auth_token" ]; then
-                        ngrok config add-authtoken "$auth_token"
-                    else
-                        dialog --msgbox "No auth token provided. Operation canceled." 10 50
-                        manage_remote_access  # Return to the remote access menu
-                        return
-                    fi
-                fi
-
-                screen -dmS ngrok ngrok tcp 22
-                dialog --msgbox "ngrok is now running in a screen session named 'ngrok'." 10 50
-            fi
-            manage_remote_access  # Return to the remote access menu
-            ;;
-        3)  # View connection info
-            if [ "$ngrok_running" = true ]; then
-                local ngrok_info=$(curl -s http://127.0.0.1:4040/api/tunnels | grep -oE 'tcp://[^:]+:[0-9]+')
-                if [ -n "$ngrok_info" ]; then
-                    local host=$(echo "$ngrok_info" | cut -d':' -f2 | tr -d '/')
-                    local port=$(echo "$ngrok_info" | cut -d':' -f3)
-                    local username=$(whoami)  # Dynamically fetch the username
-                    local ssh_command="ssh $username@$host -p $port"
-                    dialog --msgbox "Use the following command to connect to the server:\n$ssh_command" 10 50
+                ;;
+            2)  # Open or close port
+                if [ "$ngrok_running" = true ]; then
+                    screen -S ngrok -X quit  # Shut down the screen session running ngrok
+                    dialog --msgbox "ngrok port closed successfully." 10 50
                 else
-                    dialog --msgbox "Unable to retrieve connection info. Please try again." 10 50
+                    if ! command -v ngrok &> /dev/null; then
+                        dialog --msgbox "ngrok is not installed. Installing now..." 10 50
+                        sudo apt update && sudo apt install -y ngrok
+                        local auth_token=$(dialog --inputbox "Enter your ngrok auth token:" 10 50 3>&1 1>&2 2>&3)
+                        if [ $? -ne 0 ]; then
+                            manage_remote_access  # Return to the remote access menu if canceled
+                            return
+                        fi
+                        if [ -n "$auth_token" ]; then
+                            ngrok config add-authtoken "$auth_token"
+                        else
+                            dialog --msgbox "No auth token provided. Operation canceled." 10 50
+                            manage_remote_access  # Return to the remote access menu
+                            return
+                        fi
+                    fi
+
+                    screen -dmS ngrok ngrok tcp 22
+                    dialog --msgbox "ngrok is now running in a screen session named 'ngrok'." 10 50
                 fi
-            else
-                dialog --msgbox "No active ngrok session found. Please open a port first." 10 50
-            fi
-            manage_remote_access  # Return to the remote access menu
-            ;;
-        4)  # Back to Main Menu
-            bash msc
-            ;;
-    esac
+                manage_remote_access  # Return to the remote access menu
+                ;;
+            3)  # View connection info
+                if [ "$ngrok_running" = true ]; then
+                    local ngrok_info=$(curl -s http://127.0.0.1:4040/api/tunnels | grep -oE 'tcp://[^:]+:[0-9]+')
+                    if [ -n "$ngrok_info" ]; then
+                        local host=$(echo "$ngrok_info" | cut -d':' -f2 | tr -d '/')
+                        local port=$(echo "$ngrok_info" | cut -d':' -f3)
+                        local username=$(whoami)  # Dynamically fetch the username
+                        local ssh_command="ssh $username@$host -p $port"
+                        dialog --msgbox "Use the following command to connect to the server:\n$ssh_command" 10 50
+                    else
+                        dialog --msgbox "Unable to retrieve connection info. Please try again." 10 50
+                    fi
+                else
+                    dialog --msgbox "No active ngrok session found. Please open a port first." 10 50
+                fi
+                manage_remote_access  # Return to the remote access menu
+                ;;
+            4)  # Back to Main Menu
+                bash msc
+                ;;
+        esac
+    done
 }
 
 # Main execution
