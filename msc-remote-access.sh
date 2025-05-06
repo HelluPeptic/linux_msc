@@ -22,7 +22,7 @@ type %USERPROFILE%\\.ssh\\id_ed25519.pub" 10 50
 
 # Update dialog prompts to ensure proper navigation between "Done" and "Cancel"
 setup_password() {
-    local password_file="./.ssh_keys/access_password.txt"
+    local password_file="./.passwords/access_password.txt"
 
     if [ ! -f "$password_file" ]; then
         local password=$(dialog --insecure --passwordbox "Set a password for Remote Access:" 10 50 3>&1 1>&2 2>&3)
