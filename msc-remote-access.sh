@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Ensure successful password entry transitions to the remote access menu
+# Update dialog prompts to ensure proper navigation between "Done" and "Cancel"
 setup_password() {
     local password_file="./.ssh_keys/access_password.txt"
 
@@ -19,20 +19,16 @@ setup_password() {
         dialog --msgbox "Password set successfully." 10 50
     fi
 
-    while true; do
-        local entered_password=$(dialog --insecure --passwordbox "Enter the Remote Access password:" 10 50 3>&1 1>&2 2>&3)
-        if [ $? -ne 0 ]; then
-            bash msc  # Return to the main menu if canceled
-            exit 0
-        fi
-        if [ "$entered_password" == "$(cat $password_file)" ]; then
-            break  # Exit the loop and proceed to the remote access menu
-        else
-            dialog --msgbox "Incorrect password. Please try again." 10 50
-        fi
-    done
-
-    manage_remote_access  # Proceed to the remote access menu after successful password entry
+    local entered_password=$(dialog --insecure --passwordbox "Enter the Remote Access password:" 10 50 3>&1 1>&2 2>&3)
+    if [ $? -ne 0 ]; then
+        bash msc  # Return to the main menu if canceled
+        exit 0
+    fi
+    if [ "$entered_password" != "$(cat $password_file)" ]; then
+        dialog --msgbox "Incorrect password. Returning to the main menu." 10 50
+        bash msc
+        exit 0
+    fi
 }
 
 # Ensure cancel button in dialog menus returns to the main menu
@@ -56,13 +52,17 @@ manage_remote_access() {
                 "1" "Add new user" \
                 "2" "Remove users" \
                 "3" "Close port" \
-                "4" "View connection info" \ 3>&1 1>&2 2>&3)
+                "4" "View connection info" \
+                "5" "Back to Main Menu" \
+                "6" "Remove SSH key" 3>&1 1>&2 2>&3)
         else
             action=$(dialog --cancel-label "Cancel" --menu "Global Remote Access:" 15 50 10 \
                 "1" "Add new user" \
                 "2" "Remove users" \
                 "3" "Open port" \
-                "4" "View connection info" \ 3>&1 1>&2 2>&3)
+                "4" "View connection info" \
+                "5" "Back to Main Menu" \
+                "6" "Remove SSH key" 3>&1 1>&2 2>&3)
         fi
 
         if [ $? -ne 0 ]; then
