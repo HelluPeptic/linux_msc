@@ -54,7 +54,7 @@ manage_remote_access() {
                 "3" "View connection info" \
                 "4" "Back to Main Menu" 3>&1 1>&2 2>&3)
         else
-            action=$(dialog --cancel-label "Back to Main Menu" --menu "Global Remote Access:" 15 50 10 \
+            action=$(dialog --cancel-label "Cancel" --menu "Global Remote Access:" 15 50 10 \
                 "1" "Add new user" \
                 "2" "Open port" \
                 "3" "View connection info" \
