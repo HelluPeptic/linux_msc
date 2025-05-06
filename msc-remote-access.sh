@@ -50,15 +50,19 @@ manage_remote_access() {
         if [ "$ngrok_running" = true ]; then
             action=$(dialog --cancel-label "Cancel" --menu "Global Remote Access:" 15 50 10 \
                 "1" "Add new user" \
-                "2" "Close port" \
-                "3" "View connection info" \
-                "4" "Back to Main Menu" 3>&1 1>&2 2>&3)
+                "2" "Remove users" \
+                "3" "Close port" \
+                "4" "View connection info" \
+                "5" "Back to Main Menu" \
+                "6" "Remove SSH key" 3>&1 1>&2 2>&3)
         else
             action=$(dialog --cancel-label "Cancel" --menu "Global Remote Access:" 15 50 10 \
                 "1" "Add new user" \
-                "2" "Open port" \
-                "3" "View connection info" \
-                "4" "Back to Main Menu" 3>&1 1>&2 2>&3)
+                "2" "Remove users" \
+                "3" "Open port" \
+                "4" "View connection info" \
+                "5" "Back to Main Menu" \
+                "6" "Remove SSH key" 3>&1 1>&2 2>&3)
         fi
 
         if [ $? -ne 0 ]; then
@@ -91,7 +95,33 @@ manage_remote_access() {
                 echo "SSH key added successfully to authorized_keys. Returning to the main menu."
                 bash msc  # Return to the main menu
                 ;;
-            2)  # Open or close port
+            2)  # Remove users
+                local ssh_dir="$HOME/.ssh"
+                local authorized_keys_file="$ssh_dir/authorized_keys"
+
+                if [ ! -f "$authorized_keys_file" ]; then
+                    dialog --msgbox "No authorized_keys file found. Nothing to remove." 10 50
+                    manage_remote_access
+                    return
+                fi
+
+                local keys=( $(cat "$authorized_keys_file") )
+                local key_list=()
+                for i in "${!keys[@]}"; do
+                    key_list+=("$i" "${keys[$i]}")
+                done
+
+                local selected_key=$(dialog --menu "Select an SSH key to remove:" 15 50 10 "${key_list[@]}" 3>&1 1>&2 2>&3)
+                if [ $? -ne 0 ]; then
+                    manage_remote_access  # Return to the remote access menu if canceled
+                    return
+                fi
+
+                sed -i "${selected_key}d" "$authorized_keys_file"
+                dialog --msgbox "SSH key removed successfully." 10 50
+                manage_remote_access  # Return to the remote access menu
+                ;;
+            3)  # Open or close port
                 if [ "$ngrok_running" = true ]; then
                     screen -S ngrok -X quit  # Shut down the screen session running ngrok
                     dialog --msgbox "ngrok port closed successfully." 10 50
@@ -118,7 +148,7 @@ manage_remote_access() {
                 fi
                 manage_remote_access  # Return to the remote access menu
                 ;;
-            3)  # View connection info
+            4)  # View connection info
                 if [ "$ngrok_running" = true ]; then
                     local ngrok_info=$(curl -s http://127.0.0.1:4040/api/tunnels | grep -oE 'tcp://[^:]+:[0-9]+')
                     if [ -n "$ngrok_info" ]; then
@@ -135,8 +165,34 @@ manage_remote_access() {
                 fi
                 manage_remote_access  # Return to the remote access menu
                 ;;
-            4)  # Back to Main Menu
+            5)  # Back to Main Menu
                 bash msc
+                ;;
+            6)  # Remove SSH key
+                local ssh_dir="$HOME/.ssh"
+                local authorized_keys_file="$ssh_dir/authorized_keys"
+
+                if [ ! -f "$authorized_keys_file" ]; then
+                    dialog --msgbox "No authorized_keys file found. Nothing to remove." 10 50
+                    manage_remote_access
+                    return
+                fi
+
+                local keys=( $(cat "$authorized_keys_file") )
+                local key_list=()
+                for i in "${!keys[@]}"; do
+                    key_list+=("$i" "${keys[$i]}")
+                done
+
+                local selected_key=$(dialog --menu "Select an SSH key to remove:" 15 50 10 "${key_list[@]}" 3>&1 1>&2 2>&3)
+                if [ $? -ne 0 ]; then
+                    manage_remote_access  # Return to the remote access menu if canceled
+                    return
+                fi
+
+                sed -i "${selected_key}d" "$authorized_keys_file"
+                dialog --msgbox "SSH key removed successfully." 10 50
+                manage_remote_access  # Return to the remote access menu
                 ;;
         esac
     done
