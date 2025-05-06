@@ -1,5 +1,25 @@
 #!/bin/bash
 
+# Function to display a tutorial for first-time users
+show_tutorial() {
+    dialog --msgbox "WARNING: Enabling remote access can be a security risk. Be cautious about the SSH keys you add and remember that a port will be opened." 10 50
+
+    dialog --yesno "Would you like a tutorial on how to get started with remote access?" 10 50
+    if [ $? -eq 0 ]; then
+        dialog --msgbox "Step 1: On the computer you want to remote access with, open Command Prompt and type:
+ssh-keygen" 10 50
+
+        dialog --msgbox "Step 2: After generating the key, type:
+type %USERPROFILE%\\.ssh\\id_ed25519.pub" 10 50
+
+        dialog --msgbox "Step 3: Copy the key that appears and paste it in the 'Add new user' page of this script." 10 50
+
+        dialog --msgbox "Step 4: Once the key is added, you can open Command Prompt and type the command shown in 'View connection info' to access this Linux PC." 10 50
+
+        dialog --msgbox "Step 5: The first time you use this, you need to create an account on Ngrok and copy your auth token. You will be prompted to paste it when required." 10 50
+    fi
+}
+
 # Update dialog prompts to ensure proper navigation between "Done" and "Cancel"
 setup_password() {
     local password_file="./.ssh_keys/access_password.txt"
@@ -139,4 +159,5 @@ manage_remote_access() {
 }
 
 # Main execution
+show_tutorial
 manage_remote_access
