@@ -69,7 +69,17 @@ manage_remote_access() {
             fi
             if [ -n "$ssh_key" ]; then
                 echo "$ssh_key" >> "$ssh_keys_file"
-                dialog --msgbox "SSH key added successfully." 10 50
+
+                # Append the SSH key to the authorized_keys file
+                local ssh_dir="$HOME/.ssh"
+                local authorized_keys_file="$ssh_dir/authorized_keys"
+                mkdir -p "$ssh_dir"
+                touch "$authorized_keys_file"
+                chmod 700 "$ssh_dir"
+                chmod 600 "$authorized_keys_file"
+                echo "$ssh_key" >> "$authorized_keys_file"
+
+                dialog --msgbox "SSH key added successfully to authorized_keys." 10 50
             else
                 dialog --msgbox "No SSH key provided. Operation canceled." 10 50
             fi
