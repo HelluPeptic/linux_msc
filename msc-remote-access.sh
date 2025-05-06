@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Update dialog prompts to ensure proper navigation between "Done" and "Cancel"
+# Fix password verification to properly enter the remote access menu
 setup_password() {
     local password_file="./.ssh_keys/access_password.txt"
 
@@ -19,16 +19,18 @@ setup_password() {
         dialog --msgbox "Password set successfully." 10 50
     fi
 
-    local entered_password=$(dialog --insecure --passwordbox "Enter the Remote Access password:" 10 50 3>&1 1>&2 2>&3)
-    if [ $? -ne 0 ]; then
-        bash msc  # Return to the main menu if canceled
-        exit 0
-    fi
-    if [ "$entered_password" != "$(cat $password_file)" ]; then
-        dialog --msgbox "Incorrect password. Returning to the main menu." 10 50
-        bash msc
-        exit 0
-    fi
+    while true; do
+        local entered_password=$(dialog --insecure --passwordbox "Enter the Remote Access password:" 10 50 3>&1 1>&2 2>&3)
+        if [ $? -ne 0 ]; then
+            bash msc  # Return to the main menu if canceled
+            exit 0
+        fi
+        if [ "$entered_password" == "$(cat $password_file)" ]; then
+            break  # Exit the loop and proceed to the remote access menu
+        else
+            dialog --msgbox "Incorrect password. Please try again." 10 50
+        fi
+    done
 }
 
 # Ensure cancel button in dialog menus returns to the main menu
