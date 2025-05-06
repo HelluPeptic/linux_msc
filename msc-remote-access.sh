@@ -105,19 +105,18 @@ manage_remote_access() {
                     return
                 fi
 
-                local keys=( $(cat "$authorized_keys_file") )
                 local key_list=()
-                for i in "${!keys[@]}"; do
-                    key_list+=("$i" "${keys[$i]}")
-                done
+                while IFS= read -r line; do
+                    key_list+=("$line" "$line")
+                done < "$authorized_keys_file"
 
-                local selected_key=$(dialog --menu "Select an SSH key to remove:" 15 50 10 "${key_list[@]}" 3>&1 1>&2 2>&3)
+                local selected_key=$(dialog --menu "Select an SSH key to remove:" 20 70 15 "${key_list[@]}" 3>&1 1>&2 2>&3)
                 if [ $? -ne 0 ]; then
                     manage_remote_access  # Return to the remote access menu if canceled
                     return
                 fi
 
-                sed -i "${selected_key}d" "$authorized_keys_file"
+                grep -vF "$selected_key" "$authorized_keys_file" > "$authorized_keys_file.tmp" && mv "$authorized_keys_file.tmp" "$authorized_keys_file"
                 dialog --msgbox "SSH key removed successfully." 10 50
                 manage_remote_access  # Return to the remote access menu
                 ;;
@@ -178,19 +177,18 @@ manage_remote_access() {
                     return
                 fi
 
-                local keys=( $(cat "$authorized_keys_file") )
                 local key_list=()
-                for i in "${!keys[@]}"; do
-                    key_list+=("$i" "${keys[$i]}")
-                done
+                while IFS= read -r line; do
+                    key_list+=("$line" "$line")
+                done < "$authorized_keys_file"
 
-                local selected_key=$(dialog --menu "Select an SSH key to remove:" 15 50 10 "${key_list[@]}" 3>&1 1>&2 2>&3)
+                local selected_key=$(dialog --menu "Select an SSH key to remove:" 20 70 15 "${key_list[@]}" 3>&1 1>&2 2>&3)
                 if [ $? -ne 0 ]; then
                     manage_remote_access  # Return to the remote access menu if canceled
                     return
                 fi
 
-                sed -i "${selected_key}d" "$authorized_keys_file"
+                grep -vF "$selected_key" "$authorized_keys_file" > "$authorized_keys_file.tmp" && mv "$authorized_keys_file.tmp" "$authorized_keys_file"
                 dialog --msgbox "SSH key removed successfully." 10 50
                 manage_remote_access  # Return to the remote access menu
                 ;;
