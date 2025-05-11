@@ -222,7 +222,39 @@ view_backups() {
 
     case $action in
         1)
-            tar -xzf "$backup_dir/$selected_filename" -C .
+            {
+                echo -e "5"
+                sleep 0.2
+                echo -e "10"
+                sleep 0.2
+                echo -e "15"
+                sleep 0.2
+                echo -e "20"
+                sleep 0.2
+                echo -e "25"
+                sleep 0.2
+                echo -e "30"
+                sleep 0.2
+                echo -e "35"
+                sleep 0.2
+
+                # Simulate progress during restoration
+                for i in {36..85}; do
+                    echo -e "$i\nRestoring... ($((i - 35))%)"
+                    sleep 0.05
+                done
+
+                # Actual restoration
+                tar -xzf "$backup_dir/$selected_filename" -C .
+
+                echo -e "90"
+                sleep 0.2
+                echo -e "95"
+                sleep 0.2
+                echo -e "100"
+                sleep 0.2
+            } | dialog --title "Restoring Backup" --gauge "Please wait..." 10 60 0
+
             dialog --msgbox "Backup restored successfully." 10 50
             ;;
         2)
