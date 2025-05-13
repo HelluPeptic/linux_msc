@@ -128,7 +128,150 @@ view_latest_log() {
     fi
 }
 
-# Main menu loop
+create_backup() {
+    local server_name="$1"
+    local backup_dir="$server_name/backups"
+    mkdir -p "$backup_dir"
+
+    local backup_name=$(dialog --inputbox "Choose a name for the backup:" 10 50 3>&1 1>&2 2>&3)
+    if [ -z "$backup_name" ]; then
+        dialog --msgbox "Backup creation canceled." 10 50
+        return
+    fi
+
+    # Replace spaces in the backup name with underscores to ensure compatibility
+    local sanitized_backup_name=$(echo "$backup_name" | sed 's/ /_/g')
+    local timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+    local backup_path="$backup_dir/${sanitized_backup_name}_$timestamp.tar.gz"
+
+    {
+        echo -e "5"
+        sleep 0.2
+        echo -e "10"
+        sleep 0.2
+        echo -e "15"
+        sleep 0.2
+        echo -e "20"
+        sleep 0.2
+        echo -e "25"
+        sleep 0.2
+        echo -e "30"
+        sleep 0.2
+        echo -e "35"
+        sleep 0.2
+
+        # Simulate progress during compression
+        for i in {36..85}; do
+            echo -e "$i\nCompressing... ($((i - 35))%)"
+            sleep 0.05
+        done
+
+        # Actual compression, excluding the backups folder
+        tar --exclude="$server_name/backups" -czf "$backup_path" "$server_name" 2>/dev/null
+
+        echo -e "90"
+        sleep 0.2
+        echo -e "95"
+        sleep 0.2
+        echo -e "100"
+        sleep 0.2
+    } | dialog --title "Creating Backup" --gauge "Please wait..." 10 60 0
+
+    if [ -f "$backup_path" ]; then
+        dialog --msgbox "Backup created successfully: $backup_path" 10 50
+    else
+        dialog --msgbox "Backup creation failed." 10 50
+    fi
+}
+
+
+
+view_backups() {
+    local server_name="$1"
+    local backup_dir="$server_name/backups"
+
+    if [ ! -d "$backup_dir" ]; then
+        dialog --msgbox "No backups found for $server_name." 10 50
+        return
+    fi
+
+    local menu_items=()
+    declare -A label_to_file
+
+    # Get files sorted by creation time (newest first)
+    while IFS= read -r file; do
+        local filename=$(basename "$file")
+        local name_date=$(echo "$filename" | sed -E 's/(.*)_([0-9]{4}-[0-9]{2}-[0-9]{2})_([0-9]{2})-([0-9]{2})-([0-9]{2}).tar.gz/\1 | \2 \3:\4:\5/')
+        menu_items+=("$name_date" "")
+        label_to_file["$name_date"]="$filename"
+    done < <(find "$backup_dir" -type f -name "*.tar.gz" -printf "%T@ %p\n" | sort -nr | awk '{print $2}')
+
+    local backup_choice=$(dialog --menu "Select a backup:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+
+    if [ -z "$backup_choice" ]; then
+        return
+    fi
+
+    local selected_filename="${label_to_file[$backup_choice]}"
+    local action=$(dialog --menu "Manage $backup_choice:" 15 50 10 \
+        "1" "Restore to this backup" \
+        "2" "Rename this backup" \
+        "3" "Delete this backup" 3>&1 1>&2 2>&3)
+
+    case $action in
+        1)
+            {
+                echo -e "5"
+                sleep 0.2
+                echo -e "10"
+                sleep 0.2
+                echo -e "15"
+                sleep 0.2
+                echo -e "20"
+                sleep 0.2
+                echo -e "25"
+                sleep 0.2
+                echo -e "30"
+                sleep 0.2
+                echo -e "35"
+                sleep 0.2
+
+                # Simulate progress during restoration
+                for i in {36..85}; do
+                    echo -e "$i\nRestoring... ($((i - 35))%)"
+                    sleep 0.05
+                done
+
+                # Actual restoration
+                tar -xzf "$backup_dir/$selected_filename" -C .
+
+                echo -e "90"
+                sleep 0.2
+                echo -e "95"
+                sleep 0.2
+                echo -e "100"
+                sleep 0.2
+            } | dialog --title "Restoring Backup" --gauge "Please wait..." 10 60 0
+
+            dialog --msgbox "Backup restored successfully." 10 50
+            ;;
+        2)
+            local new_name=$(dialog --inputbox "Enter a new name for the backup (date will be preserved):" 10 50 3>&1 1>&2 2>&3)
+            if [ -n "$new_name" ]; then
+                local timestamp=$(echo "$selected_filename" | sed -E 's/.*_([0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}-[0-9]{2}-[0-9]{2}).tar.gz/\1/')
+                local new_file="${new_name}_${timestamp}.tar.gz"
+                mv "$backup_dir/$selected_filename" "$backup_dir/$new_file"
+                dialog --msgbox "Backup renamed successfully to $new_file." 10 50
+            fi
+            ;;
+        3)
+            rm "$backup_dir/$selected_filename"
+            dialog --msgbox "Backup deleted successfully." 10 50
+            ;;
+    esac
+}
+
+
 while true; do
     server_dirs=()
     for dir in */; do
@@ -143,6 +286,8 @@ while true; do
         exit 0
     fi
 
+    # Sort servers so that running servers appear at the top
+    sorted_server_dirs=()
     running_servers=()
     not_running_servers=()
 
@@ -165,9 +310,11 @@ while true; do
         menu_items+=("$server" "$emoji $status")
     done
 
-    selected_server=$(dialog --menu "Select a server to manage:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    # Display the menu
+    selected_server=$(dialog --menu "Select a server:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
 
-    if [ -z "$selected_server" ] || [ "$selected_server" == "EXIT" ]; then
+    # Handle cancellation
+    if [ -z "$selected_server" ]; then
         clear
         exit 0
     fi
@@ -181,25 +328,28 @@ while true; do
             "2" "Restart Server" \
             "3" "Kill Server" \
             "4" "Exit Menu" 3>&1 1>&2 2>&3)
+
         case $action in
             1) view_console "$full_server_name" ;;
-            2) restart_server "$full_server_name" ;;
+            2) stop_server "$full_server_name" ;;  # Update status dynamically
             3) kill_server "$full_server_name" ;;
         esac
     elif [ "$status" == "Shutting Down" ]; then
-        dialog --msgbox "Server $full_server_name is shutting down. Please wait." 10 50
+        # Refresh the menu while the server is shutting down
+        dialog --msgbox "The server $full_server_name is currently shutting down. Please wait." 10 50
     else
         action=$(dialog --menu "Manage $full_server_name (🔴 Stopped):" 15 50 10 \
             "1" "Start Server" \
             "2" "Edit server.properties" \
-            "3" "View latest.log" \
-            "4" "Delete Server" \
-            "5" "Exit Menu" 3>&1 1>&2 2>&3)
+            "3" "Delete Server" \
+            "4" "Exit Menu" 3>&1 1>&2 2>&3)
+
         case $action in
             1) start_server "$full_server_name" ;;
             2) edit_properties "$full_server_name" ;;
-            3) view_latest_log "$full_server_name" ;;
-            4) delete_server "$full_server_name" ;;
+            3) delete_server "$full_server_name" ;;
+            4) ;;
         esac
     fi
+
 done
