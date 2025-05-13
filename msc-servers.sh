@@ -239,7 +239,15 @@ view_backups() {
                 sleep 0.2
 
                 # Simulate progress during restoration
-                for i in {36..85}; do
+                for i in {36..60}; do
+                    echo -e "$i\nPreparing to restore... ($((i - 35))%)"
+                    sleep 0.05
+                done
+
+                # Remove all files/folders except backups
+                find "$server_name" -mindepth 1 -not -path "$backup_dir" -not -path "$backup_dir/*" -exec rm -rf {} +
+
+                for i in {61..85}; do
                     echo -e "$i\nRestoring... ($((i - 35))%)"
                     sleep 0.05
                 done
