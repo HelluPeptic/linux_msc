@@ -244,8 +244,8 @@ view_backups() {
                     sleep 0.05
                 done
 
-                # Remove all files/folders except backups
-                find "$server_name" -mindepth 1 -not -path "$backup_dir" -not -path "$backup_dir/*" -exec rm -rf {} +
+                # Remove all files/folders except backups, suppress errors
+                find "$server_name" -mindepth 1 -not -path "$backup_dir" -not -path "$backup_dir/*" -exec rm -rf {} + 2>/dev/null
 
                 for i in {61..85}; do
                     echo -e "$i\nRestoring... ($((i - 35))%)"
