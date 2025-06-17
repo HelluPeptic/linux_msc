@@ -81,10 +81,11 @@ case $choice in
     3) 
         server_type="fabric"
         versions=(
-            1 "1.21.4"
-            2 "1.21.1"
-            3 "1.20.4"
-            4 "1.20.1"
+            1 "1.21.5"
+            2 "1.21.4"
+            3 "1.21.1"
+            4 "1.20.4"
+            5 "1.20.1"
         )
         ;;
     4) 
@@ -132,10 +133,11 @@ if [ -z "$version_choice" ]; then
 fi
 
 case $version_choice in
-    1) server_version="1.21.4" ;;
-    2) server_version="1.21.1" ;;
-    3) server_version="1.20.4" ;;
-    4) server_version="1.20.1" ;;
+    1) server_version="1.21.5" ;;
+    2) server_version="1.21.4" ;;
+    3) server_version="1.21.1" ;;
+    4) server_version="1.20.4" ;;
+    5) server_version="1.20.1" ;;
 esac
 
 # Prompt for RAM allocation
@@ -191,6 +193,7 @@ case $server_type in
         ;;
     "fabric")
         case $server_version in
+            "1.21.5") bash "$create_scripts_dir/msc_fabric_1.21.5.sh" "$server_dir" "$server_ram" ;;
             "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" "$server_ram" ;;
             "1.21.1") bash "$create_scripts_dir/msc_fabric_1.21.1.sh" "$server_dir" "$server_ram" ;;
             "1.20.4") bash "$create_scripts_dir/msc_fabric_1.20.4.sh" "$server_dir" "$server_ram" ;;
