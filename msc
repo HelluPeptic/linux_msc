@@ -14,146 +14,46 @@ get_current_version() {
     fi
 }
 
-# Function to save current version
-save_current_version() {
-    local commit_hash="$1"
-    echo "$commit_hash" > "$VERSION_FILE"
-}
-
-# Function to get current commit timestamp
-get_current_commit_timestamp() {
-    local current_commit="$1"
-    if [ "$current_commit" = "unknown" ]; then
-        echo "0"
-        return
-    fi
-    
-    # Get timestamp of current commit from GitHub API
-    local commit_info=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits/$current_commit")
-    if command -v jq >/dev/null 2>&1; then
-        echo "$commit_info" | jq -r '.commit.author.date' 2>/dev/null || echo "0"
-    else
-        echo "$commit_info" | grep -o '"date": "[^"]*"' | head -n1 | sed 's/"date": "\([^"]*\"/\1/' || echo "0"
-    fi
-}
-
-# Function to compare timestamps (returns 0 if first is newer than second)
-compare_timestamps() {
-    local timestamp1="$1"
-    local timestamp2="$2"
-    
-    # Convert to seconds since epoch for comparison
-    local time1=$(date -d "$timestamp1" +%s 2>/dev/null || echo "0")
-    local time2=$(date -d "$timestamp2" +%s 2>/dev/null || echo "0")
-    
-    [ "$time1" -gt "$time2" ]
-}
-
-# Function to get current commit timestamp
-get_current_commit_timestamp() {
-    local current_commit="$1"
-    if [ "$current_commit" = "unknown" ]; then
-        echo "0"
-        return
-    fi
-    
-    # Get timestamp of current commit from GitHub API
-    local commit_info=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits/$current_commit")
-    if command -v jq >/dev/null 2>&1; then
-        echo "$commit_info" | jq -r '.commit.author.date' 2>/dev/null || echo "0"
-    else
-        echo "$commit_info" | grep -o '"date": "[^"]*"' | head -n1 | sed 's/"date": "\([^"]*\)"/\1/' || echo "0"
-    fi
-}
-
-# Function to compare timestamps (returns 0 if first is newer than second)
-compare_timestamps() {
-    local timestamp1="$1"
-    local timestamp2="$2"
-    
-    # Convert to seconds since epoch for comparison
-    local time1=$(date -d "$timestamp1" +%s 2>/dev/null || echo "0")
-    local time2=$(date -d "$timestamp2" +%s 2>/dev/null || echo "0")
-    
-    [ "$time1" -gt "$time2" ]
-}
-
-# Function to get GitHub commits for a branch
-get_github_commits() {
-    local branch="$1"
-    local current_commit="$2"
-    local current_timestamp="$3"
-    
-    # Get commits from GitHub API
-    local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=5")
-    
-    if [ $? -ne 0 ] || [ -z "$commits_json" ] || echo "$commits_json" | grep -q '"message": "Not Found"'; then
-        return 1
-    fi
-    
-    # Show only commits newer than current version
-    echo "$commits_json" | grep -o '"sha": "[^"]*"' | head -3 | while read -r sha_line; do
-        local sha=$(echo "$sha_line" | sed 's/"sha": "\([^"]*\)"/\1/')
-        
-        # Skip if this is the same commit as current
-        if [ "$sha" = "$current_commit" ]; then
-            continue
-        fi
-        
-        # Extract date and message for this commit
-        local date=$(echo "$commits_json" | grep -A10 "\"sha\": \"$sha\"" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
-        local message=$(echo "$commits_json" | grep -A5 "\"sha\": \"$sha\"" | grep '"message":' | head -n1 | sed 's/.*"message": "\([^"]*\)".*/\1/' | head -c50)
-        
-        # Only show commits newer than current version
-        if compare_timestamps "$date" "$current_timestamp"; then
-            echo "$sha|$date|$message|$branch"
-        fi
-    done
-}
-
 # Function to check for updates
 check_for_updates() {
-    # Check if jq is available for better JSON parsing
-    if ! command -v jq >/dev/null 2>&1; then
-        if dialog --yesno "For better update checking, we recommend installing 'jq'.\n\nInstall jq now? (requires sudo)" 10 60; then
-            if sudo apt update && sudo apt install -y jq; then
-                dialog --msgbox "jq installed successfully!" 8 40
-            else
-                dialog --msgbox "Failed to install jq. Update checking will still work but may be less reliable." 10 60
-            fi
-        fi
-    fi
-    
     dialog --infobox "Checking for updates..." 8 40
     
     local current_version=$(get_current_version)
-    local updates_found=false
     local temp_file="/tmp/msc_updates"
+    local found_updates=false
     
     # Clear temp file
     > "$temp_file"
     
-    # If version is unknown, show all recent commits anyway for testing
-    if [ "$current_version" = "unknown" ]; then
-        current_version="dummy_hash_that_wont_match"
-    fi
-    
-    # Get current commit timestamp to compare against
-    local current_timestamp=$(get_current_commit_timestamp "$current_version")
-    
-    # Check main branch
-    if get_github_commits "main" "$current_version" "$current_timestamp" >> "$temp_file"; then
-        updates_found=true
-    fi
-    
-    # Check other branches (mark as experimental)  
-    for branch in "QoL-updates" "dev" "experimental"; do
-        if get_github_commits "$branch" "$current_version" "$current_timestamp" | sed "s/|$branch$/|$branch [EXPERIMENTAL]/" >> "$temp_file"; then
-            updates_found=true
+    # Get latest commits from each branch
+    for branch in "main" "QoL-updates" "dev" "experimental"; do
+        # Get latest commit from this branch
+        local latest_commit=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits/$branch" 2>/dev/null | grep -o '"sha": "[^"]*"' | head -1 | sed 's/"sha": "\([^"]*\)"/\1/')
+        
+        # Skip if we couldn't get the commit
+        if [ -z "$latest_commit" ]; then
+            continue
+        fi
+        
+        # If version is unknown or different from current, show it as an update
+        if [ "$current_version" = "unknown" ] || [ "$latest_commit" != "$current_version" ]; then
+            # Get commit info
+            local commit_info=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits/$latest_commit" 2>/dev/null)
+            if [ $? -eq 0 ] && [ -n "$commit_info" ]; then
+                local commit_message=$(echo "$commit_info" | grep -o '"message": "[^"]*"' | head -1 | sed 's/"message": "\([^"]*\)"/\1/' | cut -c1-50)
+                local commit_date=$(echo "$commit_info" | grep -o '"date": "[^"]*"' | head -1 | sed 's/"date": "\([^"]*\)"/\1/')
+                
+                # Format date nicely
+                local display_date=$(date -d "$commit_date" "+%b %d, %Y" 2>/dev/null || echo "Recent")
+                
+                # Add to updates file
+                echo "$latest_commit|$commit_message|$branch|$display_date" >> "$temp_file"
+                found_updates=true
+            fi
         fi
     done
     
-    if [ ! -s "$temp_file" ]; then
+    if [ "$found_updates" = false ] || [ ! -s "$temp_file" ]; then
         dialog --msgbox "You're up to date!\\n\\nNo newer updates available.\\n\\nCurrent version: ${current_version:0:8}" 10 50
         rm -f "$temp_file"
         return
@@ -171,9 +71,7 @@ show_update_menu() {
     local commit_data=()
     local counter=1
     
-    while IFS='|' read -r commit_hash commit_date commit_message branch; do
-        # Format the date nicely
-        local display_date=$(date -d "$commit_date" "+%b %d, %Y" 2>/dev/null || echo "Recent")
+    while IFS='|' read -r commit_hash commit_message branch display_date; do
         
         # Create user-friendly display with experimental marking and commit hash
         local short_hash="${commit_hash:0:8}"
