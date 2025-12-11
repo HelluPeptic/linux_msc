@@ -82,17 +82,16 @@ compare_timestamps() {
 get_github_commits() {
     local branch="$1"
     local current_commit="$2"
-    local current_timestamp="$3"
     
     # Get commits from GitHub API
-    local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=10")
+    local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=5")
     
     if [ $? -ne 0 ] || [ -z "$commits_json" ] || echo "$commits_json" | grep -q '"message": "Not Found"'; then
         return 1
     fi
     
-    # Simple parsing - just show the first few commits that aren't the current one
-    echo "$commits_json" | grep -o '"sha": "[^"]*"' | head -5 | while read -r sha_line; do
+    # Simple parsing - just show commits that aren't the current one
+    echo "$commits_json" | grep -o '"sha": "[^"]*"' | head -3 | while read -r sha_line; do
         local sha=$(echo "$sha_line" | sed 's/"sha": "\([^"]*\)"/\1/')
         
         # Skip if this is the same commit as current
@@ -101,9 +100,8 @@ get_github_commits() {
         fi
         
         # Extract date and message for this commit
-        local commit_section=$(echo "$commits_json" | sed -n "/\"sha\": \"$sha\"/,/},/p")
-        local date=$(echo "$commit_section" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
-        local message=$(echo "$commit_section" | grep '"message":' | head -n1 | sed 's/.*"message": "\([^"]*\)".*/\1/' | head -c50)
+        local date=$(echo "$commits_json" | grep -A10 "\"sha\": \"$sha\"" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
+        local message=$(echo "$commits_json" | grep -A5 "\"sha\": \"$sha\"" | grep '"message":' | head -n1 | sed 's/.*"message": "\([^"]*\)".*/\1/' | head -c50)
         
         echo "$sha|$date|$message|$branch"
     done
@@ -138,17 +136,14 @@ check_for_updates() {
         return
     fi
     
-    # Get timestamp of current version
-    local current_timestamp=$(get_current_commit_timestamp "$current_version")
-    
     # Check main branch
-    if get_github_commits "main" "$current_version" "$current_timestamp" >> "$temp_file"; then
+    if get_github_commits "main" "$current_version" >> "$temp_file"; then
         updates_found=true
     fi
     
     # Check other branches (mark as experimental)
     for branch in "QoL-updates" "dev" "experimental"; do
-        if get_github_commits "$branch" "$current_version" "$current_timestamp" | sed "s/|$branch$/|$branch [EXPERIMENTAL]/" >> "$temp_file"; then
+        if get_github_commits "$branch" "$current_version" | sed "s/|$branch$/|$branch [EXPERIMENTAL]/" >> "$temp_file"; then
             updates_found=true
         fi
     done
