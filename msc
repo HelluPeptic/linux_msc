@@ -86,18 +86,18 @@ get_github_commits() {
     # Get commits from GitHub API
     local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=5")
     
-    # Debug: Show API response status
-    echo "DEBUG: Checking branch $branch" >&2
-    echo "DEBUG: API response length: ${#commits_json}" >&2
-    
     if [ $? -ne 0 ] || [ -z "$commits_json" ] || echo "$commits_json" | grep -q '"message": "Not Found"'; then
-        echo "DEBUG: API call failed or branch not found" >&2
         return 1
     fi
     
-    # Debug: Show ALL commits for now (remove current_commit check temporarily)
+    # Show commits that aren't the current commit
     echo "$commits_json" | grep -o '"sha": "[^"]*"' | head -3 | while read -r sha_line; do
         local sha=$(echo "$sha_line" | sed 's/"sha": "\([^"]*\)"/\1/')
+        
+        # Skip if this is the same commit as current
+        if [ "$sha" = "$current_commit" ]; then
+            continue
+        fi
         
         # Extract date and message for this commit
         local date=$(echo "$commits_json" | grep -A10 "\"sha\": \"$sha\"" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
