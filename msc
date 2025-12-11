@@ -14,6 +14,50 @@ get_current_version() {
     fi
 }
 
+# Function to get current commit timestamp
+get_current_commit_timestamp() {
+    local current_commit="$1"
+    if [ "$current_commit" = "unknown" ]; then
+        echo "1970-01-01T00:00:00Z"  # Very old date so everything appears as newer
+        return
+    fi
+    
+    # Get timestamp of current commit from GitHub API
+    local commit_info=$(curl -s --connect-timeout 10 "https://api.github.com/repos/$GITHUB_REPO/commits/$current_commit" 2>/dev/null)
+    if [ $? -eq 0 ] && [ -n "$commit_info" ]; then
+        local timestamp=$(echo "$commit_info" | grep -o '"date": "[^"]*"' | head -1 | sed 's/"date": "\([^"]*\)"/\1/')
+        if [ -n "$timestamp" ]; then
+            echo "$timestamp"
+        else
+            echo "1970-01-01T00:00:00Z"
+        fi
+    else
+        echo "1970-01-01T00:00:00Z"
+    fi
+}
+
+# Function to compare timestamps (returns 0 if first timestamp is newer than second)
+is_newer_timestamp() {
+    local timestamp1="$1"
+    local timestamp2="$2"
+    
+    # Convert to seconds since epoch for comparison
+    local time1=$(date -d "$timestamp1" +%s 2>/dev/null || echo "0")
+    local time2=$(date -d "$timestamp2" +%s 2>/dev/null || echo "0")
+    
+    # Return true (0) if timestamp1 is newer than timestamp2
+    [ "$time1" -gt "$time2" ]
+}
+
+# Function to get all branches from repository
+get_all_branches() {
+    # Get all branches from GitHub API
+    curl -s --connect-timeout 10 "https://api.github.com/repos/$GITHUB_REPO/branches" 2>/dev/null | \
+    grep -o '"name": "[^"]*"' | \
+    sed 's/"name": "\([^"]*\)"/\1/' | \
+    head -20  # Limit to prevent too many API calls
+}
+
 # Function to check for updates
 check_for_updates() {
     dialog --infobox "Checking for updates..." 8 40
@@ -24,44 +68,72 @@ check_for_updates() {
     # Clear temp file
     > "$temp_file"
     
-    # ALWAYS show latest from each branch for user to choose
-    # This way user can see what's available regardless of current version
-    for branch in "main" "QoL-updates" "dev" "experimental"; do
-        # Get latest commit from this branch
-        local latest_commit=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits/$branch" 2>/dev/null | grep -o '"sha": "[^"]*"' | head -1 | sed 's/"sha": "\([^"]*\)"/\1/')
+    # Test connectivity first
+    if ! curl -s --connect-timeout 5 "https://api.github.com" >/dev/null 2>&1; then
+        dialog --msgbox "Cannot connect to GitHub API.\\n\\nPlease check your internet connection and try again." 10 50
+        return
+    fi
+    
+    # Get current commit timestamp for comparison
+    local current_timestamp=$(get_current_commit_timestamp "$current_version")
+    
+    # Get all available branches dynamically
+    local branches=$(get_all_branches)
+    if [ -z "$branches" ]; then
+        dialog --msgbox "Could not fetch branch information from GitHub.\\n\\nPlease try again later." 10 50
+        return
+    fi
+    
+    # Check each branch for newer commits
+    while IFS= read -r branch; do
+        [ -z "$branch" ] && continue
         
-        # Skip if we couldn't get the commit
-        if [ -z "$latest_commit" ]; then
+        # Get recent commits from this branch (last 5)
+        local commits_data=$(curl -s --connect-timeout 10 "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=5" 2>/dev/null)
+        if [ $? -ne 0 ] || [ -z "$commits_data" ]; then
             continue
         fi
         
-        # Get commit info
-        local commit_info=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits/$latest_commit" 2>/dev/null)
-        if [ $? -eq 0 ] && [ -n "$commit_info" ]; then
-            local commit_message=$(echo "$commit_info" | grep -o '"message": "[^"]*"' | head -1 | sed 's/"message": "\([^"]*\)"/\1/' | cut -c1-50)
-            local commit_date=$(echo "$commit_info" | grep -o '"date": "[^"]*"' | head -1 | sed 's/"date": "\([^"]*\)"/\1/')
-            
-            # Format date nicely
-            local display_date=$(date -d "$commit_date" "+%b %d, %Y" 2>/dev/null || echo "Recent")
-            
-            # Mark if this is the current version
-            local current_marker=""
-            if [ "$latest_commit" = "$current_version" ]; then
-                current_marker=" [CURRENT]"
+        # Find the newest commit from this branch that's newer than current
+        local found_newer=false
+        local commit_shas=$(echo "$commits_data" | grep -o '"sha": "[^"]*"' | sed 's/"sha": "\([^"]*\)"/\1/')
+        
+        for commit_hash in $commit_shas; do
+            # Skip if same as current version
+            if [ "$commit_hash" = "$current_version" ]; then
+                continue
             fi
             
-            # Add to updates file
-            echo "$latest_commit|$commit_message|$branch|$display_date|$current_marker" >> "$temp_file"
-        fi
-    done
+            # Get this commit's timestamp and message
+            local commit_timestamp=$(echo "$commits_data" | grep -A20 "\"sha\": \"$commit_hash\"" | grep -m1 '"date":' | sed 's/.*"date": "\([^"]*\)".*/\1/')
+            local commit_message=$(echo "$commits_data" | grep -A10 "\"sha\": \"$commit_hash\"" | grep -m1 '"message":' | sed 's/.*"message": "\([^"]*\)".*/\1/' | head -c50)
+            
+            # Only include if this commit is newer than current
+            if [ -n "$commit_timestamp" ] && is_newer_timestamp "$commit_timestamp" "$current_timestamp"; then
+                # Format date for display
+                local display_date=$(date -d "$commit_timestamp" "+%b %d, %Y %H:%M" 2>/dev/null || echo "Recent")
+                
+                # Mark experimental branches (anything other than main)
+                local branch_marker=""
+                if [ "$branch" != "main" ]; then
+                    branch_marker="[EXPERIMENTAL] "
+                fi
+                
+                echo "$commit_hash|$commit_message|$branch|$display_date|$branch_marker" >> "$temp_file"
+                found_newer=true
+                break  # Only take the newest commit per branch
+            fi
+        done
+    done <<< "$branches"
     
+    # Check if we found any updates
     if [ ! -s "$temp_file" ]; then
-        dialog --msgbox "Could not connect to GitHub or no branches found.\\n\\nPlease check your internet connection." 10 50
+        dialog --msgbox "You're up to date!\\n\\nNo newer commits found.\\n\\nCurrent version: ${current_version:0:8}" 10 50
         rm -f "$temp_file"
         return
     fi
     
-    # Show available versions
+    # Show available updates
     show_update_menu "$temp_file" "$current_version"
     rm -f "$temp_file"
 }
@@ -74,25 +146,17 @@ show_update_menu() {
     local commit_data=()
     local counter=1
     
-    while IFS='|' read -r commit_hash commit_message branch display_date current_marker; do
+    while IFS='|' read -r commit_hash commit_message branch display_date branch_marker; do
         
         # Create user-friendly display with experimental marking and commit hash
         local short_hash="${commit_hash:0:8}"
         local display_text
         
-        # Mark as experimental if branch is NOT main
-        if [ "$branch" != "main" ]; then
-            if [ -z "$commit_message" ] || [ "$commit_message" = "" ]; then
-                display_text="[EXPERIMENTAL] Commit $short_hash ($display_date - $branch)$current_marker"
-            else
-                display_text="[EXPERIMENTAL] $commit_message [$short_hash] ($display_date - $branch)$current_marker"
-            fi
+        # Use the branch marker from the data
+        if [ -z "$commit_message" ] || [ "$commit_message" = "" ]; then
+            display_text="${branch_marker}Commit $short_hash ($display_date - $branch)"
         else
-            if [ -z "$commit_message" ] || [ "$commit_message" = "" ]; then
-                display_text="Commit $short_hash ($display_date - $branch)$current_marker"
-            else
-                display_text="$commit_message [$short_hash] ($display_date - $branch)$current_marker"
-            fi
+            display_text="${branch_marker}$commit_message [$short_hash] ($display_date - $branch)"
         fi
         
         menu_items+=("$counter" "$display_text")
@@ -110,18 +174,14 @@ show_update_menu() {
     if [ -n "$selection" ] && [ -n "${commit_data[$selection]}" ]; then
         IFS='|' read -r selected_commit selected_message selected_branch <<< "${commit_data[$selection]}"
         
-        # Show confirmation dialog
+        # Show confirmation dialog with experimental warning
         local branch_warning=""
-        if [[ "$selected_branch" == *"EXPERIMENTAL"* ]]; then
-            branch_warning="\n\n  WARNING: This is an experimental branch!\nIt may contain unstable features or bugs."
+        if [ "$selected_branch" != "main" ]; then
+            branch_warning="\n\nWARNING: This is an experimental branch!\nIt may contain unstable features or bugs."
         fi
         
-        # Clean branch name for display
-        local clean_branch=$(echo "$selected_branch" | sed 's/ \[EXPERIMENTAL\]//')
-        local branch_display="$clean_branch"
-        
-        if dialog --yesno "Install update?\n\nCommit: ${selected_commit:0:8}\nMessage: $selected_message\nBranch: $branch_display$branch_warning\n\nThis will update your msc installation." 15 70; then
-            install_update "$selected_commit" "$clean_branch"
+        if dialog --yesno "Install update?\n\nCommit: ${selected_commit:0:8}\nMessage: $selected_message\nBranch: $selected_branch$branch_warning\n\nThis will update your msc installation." 15 70; then
+            install_update "$selected_commit" "$selected_branch"
         fi
     fi
 }
