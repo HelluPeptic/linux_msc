@@ -86,7 +86,11 @@ get_github_commits() {
     # Get commits from GitHub API
     local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=5")
     
+    echo "DEBUG: Branch $branch - JSON length: ${#commits_json}"
+    echo "DEBUG: First 100 chars: ${commits_json:0:100}"
+    
     if [ $? -ne 0 ] || [ -z "$commits_json" ] || echo "$commits_json" | grep -q '"message": "Not Found"'; then
+        echo "DEBUG: API call failed for branch $branch"
         return 1
     fi
     
@@ -134,17 +138,14 @@ check_for_updates() {
         current_version="dummy_hash_that_wont_match"
     fi
     
-    # Check main branch
-    if get_github_commits "main" "$current_version" >> "$temp_file"; then
-        updates_found=true
-    fi
+    # Debug: Check if function is working at all
+    echo "Testing main branch..." >> "$temp_file"
+    get_github_commits "main" "$current_version" >> "$temp_file" 2>&1
+    echo "Testing QoL-updates branch..." >> "$temp_file" 
+    get_github_commits "QoL-updates" "$current_version" >> "$temp_file" 2>&1
     
-    # Check other branches (mark as experimental)
-    for branch in "QoL-updates" "dev" "experimental"; do
-        if get_github_commits "$branch" "$current_version" | sed "s/|$branch$/|$branch [EXPERIMENTAL]/" >> "$temp_file"; then
-            updates_found=true
-        fi
-    done
+    # Always show temp file for debugging
+    updates_found=true
     
     if [ ! -s "$temp_file" ]; then
         dialog --msgbox "You're up to date!\\n\\nNo newer updates available.\\n\\nCurrent version: ${current_version:0:8}" 10 50
