@@ -20,13 +20,72 @@ save_current_version() {
     echo "$commit_hash" > "$VERSION_FILE"
 }
 
+# Function to get current commit timestamp
+get_current_commit_timestamp() {
+    local current_commit="$1"
+    if [ "$current_commit" = "unknown" ]; then
+        echo "0"
+        return
+    fi
+    
+    # Get timestamp of current commit from GitHub API
+    local commit_info=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits/$current_commit")
+    if command -v jq >/dev/null 2>&1; then
+        echo "$commit_info" | jq -r '.commit.author.date' 2>/dev/null || echo "0"
+    else
+        echo "$commit_info" | grep -o '"date": "[^"]*"' | head -n1 | sed 's/"date": "\([^"]*\"/\1/' || echo "0"
+    fi
+}
+
+# Function to compare timestamps (returns 0 if first is newer than second)
+compare_timestamps() {
+    local timestamp1="$1"
+    local timestamp2="$2"
+    
+    # Convert to seconds since epoch for comparison
+    local time1=$(date -d "$timestamp1" +%s 2>/dev/null || echo "0")
+    local time2=$(date -d "$timestamp2" +%s 2>/dev/null || echo "0")
+    
+    [ "$time1" -gt "$time2" ]
+}
+
+# Function to get current commit timestamp
+get_current_commit_timestamp() {
+    local current_commit="$1"
+    if [ "$current_commit" = "unknown" ]; then
+        echo "0"
+        return
+    fi
+    
+    # Get timestamp of current commit from GitHub API
+    local commit_info=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits/$current_commit")
+    if command -v jq >/dev/null 2>&1; then
+        echo "$commit_info" | jq -r '.commit.author.date' 2>/dev/null || echo "0"
+    else
+        echo "$commit_info" | grep -o '"date": "[^"]*"' | head -n1 | sed 's/"date": "\([^"]*\)"/\1/' || echo "0"
+    fi
+}
+
+# Function to compare timestamps (returns 0 if first is newer than second)
+compare_timestamps() {
+    local timestamp1="$1"
+    local timestamp2="$2"
+    
+    # Convert to seconds since epoch for comparison
+    local time1=$(date -d "$timestamp1" +%s 2>/dev/null || echo "0")
+    local time2=$(date -d "$timestamp2" +%s 2>/dev/null || echo "0")
+    
+    [ "$time1" -gt "$time2" ]
+}
+
 # Function to get GitHub commits for a branch
 get_github_commits() {
     local branch="$1"
     local current_commit="$2"
+    local current_timestamp="$3"
     
     # Get commits from GitHub API
-    local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=5")
+    local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=10")
     
     if [ $? -ne 0 ] || [ -z "$commits_json" ] || echo "$commits_json" | grep -q '"message": "Not Found"'; then
         return 1
@@ -35,12 +94,16 @@ get_github_commits() {
     # Use jq if available, otherwise use simple grep/sed parsing
     if command -v jq >/dev/null 2>&1; then
         echo "$commits_json" | jq -r '.[] | "\(.sha)|\(.commit.author.date)|\(.commit.message)|'$branch'"' | while IFS='|' read -r sha date message branch_name; do
-            if [ "$sha" != "$current_commit" ]; then
+            # Skip if this is the same commit
+            if [ "$sha" = "$current_commit" ]; then
+                continue
+            fi
+            
+            # Only show commits newer than current version
+            if compare_timestamps "$date" "$current_timestamp"; then
                 # Clean up the commit message (first line only, max 50 chars)
                 clean_message=$(echo "$message" | head -n1 | cut -c1-50)
                 echo "$sha|$date|$clean_message|$branch_name"
-            else
-                break
             fi
         done
     else
@@ -50,15 +113,24 @@ get_github_commits() {
         
         # Extract commits one by one
         local commit_count=0
-        while [ $commit_count -lt 5 ]; do
+        while [ $commit_count -lt 10 ]; do
             local sha=$(grep -o '"sha": "[^"]*"' "$temp_commits" | head -n1 | sed 's/"sha": "\([^"]*\)"/\1/')
             [ -z "$sha" ] && break
-            [ "$sha" = "$current_commit" ] && break
+            
+            # Skip if this is the same commit
+            if [ "$sha" = "$current_commit" ]; then
+                sed -i "/\"sha\": \"$sha\"/,/},/d" "$temp_commits"
+                commit_count=$((commit_count + 1))
+                continue
+            fi
             
             local date=$(grep -A20 "\"sha\": \"$sha\"" "$temp_commits" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
             local message=$(grep -A10 "\"sha\": \"$sha\"" "$temp_commits" | grep '"message":' | head -n1 | sed 's/.*"message": "\([^"]*\)".*/\1/' | cut -c1-50)
             
-            echo "$sha|$date|$message|$branch"
+            # Only show commits newer than current version
+            if compare_timestamps "$date" "$current_timestamp"; then
+                echo "$sha|$date|$message|$branch"
+            fi
             
             # Remove this commit from temp file to get next one
             sed -i "/\"sha\": \"$sha\"/,/},/d" "$temp_commits"
@@ -98,14 +170,17 @@ check_for_updates() {
         return
     fi
     
+    # Get timestamp of current version
+    local current_timestamp=$(get_current_commit_timestamp "$current_version")
+    
     # Check main branch
-    if get_github_commits "main" "$current_version" >> "$temp_file"; then
+    if get_github_commits "main" "$current_version" "$current_timestamp" >> "$temp_file"; then
         updates_found=true
     fi
     
     # Check other branches (mark as experimental)
     for branch in "QoL-updates" "dev" "experimental"; do
-        if get_github_commits "$branch" "$current_version" | sed "s/|$branch$/|$branch [EXPERIMENTAL]/" >> "$temp_file"; then
+        if get_github_commits "$branch" "$current_version" "$current_timestamp" | sed "s/|$branch$/|$branch [EXPERIMENTAL]/" >> "$temp_file"; then
             updates_found=true
         fi
     done
