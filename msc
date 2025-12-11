@@ -26,34 +26,59 @@ get_github_commits() {
     local current_commit="$2"
     
     # Get commits from GitHub API
-    local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=10")
+    local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=5")
     
-    if [ $? -ne 0 ] || [ -z "$commits_json" ]; then
+    if [ $? -ne 0 ] || [ -z "$commits_json" ] || echo "$commits_json" | grep -q '"message": "Not Found"'; then
         return 1
     fi
     
-    # Parse commits and find newer ones
-    echo "$commits_json" | grep -E '"sha":|"date":|"message":' | 
-    while read -r line; do
-        if echo "$line" | grep -q '"sha"'; then
-            commit_hash=$(echo "$line" | sed 's/.*"sha": "\([^"]*\)".*/\1/')
-            read -r date_line
-            read -r message_line
-            commit_date=$(echo "$date_line" | sed 's/.*"date": "\([^"]*\)".*/\1/')
-            commit_message=$(echo "$message_line" | sed 's/.*"message": "\([^"]*\)".*/\1/' | cut -c1-60)
-            
-            # If this is a newer commit than current, output it
-            if [ "$commit_hash" != "$current_commit" ]; then
-                echo "$commit_hash|$commit_date|$commit_message|$branch"
+    # Use jq if available, otherwise use a more reliable parsing method
+    if command -v jq >/dev/null 2>&1; then
+        echo "$commits_json" | jq -r '.[] | "\(.sha)|\(.commit.author.date)|\(.commit.message)|'$branch'"' | while IFS='|' read -r sha date message branch_name; do
+            if [ "$sha" != "$current_commit" ]; then
+                # Clean up the commit message (first line only, max 50 chars)
+                clean_message=$(echo "$message" | head -n1 | cut -c1-50)
+                echo "$sha|$date|$clean_message|$branch_name"
             else
-                break  # We've reached our current commit, no more newer ones
+                break
             fi
-        fi
-    done
+        done
+    else
+        # Fallback parsing without jq
+        echo "$commits_json" | awk '
+        BEGIN { RS="},"; FS=""; commit_found=0 }
+        {
+            if (match($0, /"sha": "([^"]+)"/, sha_match)) {
+                sha = sha_match[1]
+                if (sha == "'$current_commit'") exit
+                
+                if (match($0, /"date": "([^"]+)"/, date_match)) {
+                    date = date_match[1]
+                }
+                
+                if (match($0, /"message": "([^"]+)"/, msg_match)) {
+                    message = substr(msg_match[1], 1, 50)
+                    gsub(/\n/, " ", message)
+                    print sha "|" date "|" message "|'$branch'"
+                }
+            }
+        }'
+    fi
 }
 
 # Function to check for updates
 check_for_updates() {
+    # Check if jq is available for better JSON parsing
+    if ! command -v jq >/dev/null 2>&1; then
+        if dialog --yesno "For better update checking, we recommend installing 'jq'.\n\nInstall jq now? (requires sudo)" 10 60; then
+            if sudo apt update && sudo apt install -y jq; then
+                dialog --msgbox "jq installed successfully!" 8 40
+            else
+                dialog --msgbox "Failed to install jq. Update checking will still work but may be less reliable." 10 60
+            fi
+        fi
+    fi
+    
     dialog --infobox "Checking for updates..." 8 40
     
     local current_version=$(get_current_version)
@@ -62,6 +87,13 @@ check_for_updates() {
     
     # Clear temp file
     > "$temp_file"
+    
+    # If version is unknown, only check for the latest release on main branch
+    if [ "$current_version" = "unknown" ]; then
+        dialog --msgbox "This appears to be a development version or first install.\n\nFor development versions, please use git to update manually.\n\nIf this is a regular install, please reinstall from the latest release." 12 70
+        rm -f "$temp_file"
+        return
+    fi
     
     # Check main branch
     if get_github_commits "main" "$current_version" >> "$temp_file"; then
@@ -76,7 +108,7 @@ check_for_updates() {
     done
     
     if [ ! -s "$temp_file" ]; then
-        dialog --msgbox "No updates available.\n\nCurrent version: ${current_version:0:8}" 10 50
+        dialog --msgbox "You're up to date! \u2713\n\nNo newer updates available.\n\nCurrent version: ${current_version:0:8}" 10 50
         rm -f "$temp_file"
         return
     fi
@@ -94,11 +126,19 @@ show_update_menu() {
     local counter=1
     
     while IFS='|' read -r commit_hash commit_date commit_message branch; do
-        local display_date=$(date -d "$commit_date" "+%Y-%m-%d %H:%M" 2>/dev/null || echo "$commit_date")
-        local display_text="${commit_hash:0:8} - $commit_message ($branch)"
-        local display_info="$display_date"
+        # Format the date nicely
+        local display_date=$(date -d "$commit_date" "+%b %d, %Y" 2>/dev/null || echo "Recent")
         
-        menu_items+=("$counter" "$display_text")
+        # Create user-friendly display
+        local branch_label="$branch"
+        if [[ "$branch" == *"EXPERIMENTAL"* ]]; then
+            branch_label="⚠️  $branch"
+        fi
+        
+        local display_text="$commit_message"
+        local display_info="$display_date - $branch_label"
+        
+        menu_items+=("$counter" "$display_text" "$display_info")
         commit_data["$counter"]="$commit_hash|$commit_message|$branch"
         counter=$((counter + 1))
     done < "$updates_file"
@@ -108,7 +148,7 @@ show_update_menu() {
         return
     fi
     
-    local selection=$(dialog --menu "Available Updates:\n\nSelect an update to install:" 20 80 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    local selection=$(dialog --menu "Available Updates:\n\nSelect an update to install:" 20 100 8 "${menu_items[@]}" 3>&1 1>&2 2>&3)
     
     if [ -n "$selection" ] && [ -n "${commit_data[$selection]}" ]; then
         IFS='|' read -r selected_commit selected_message selected_branch <<< "${commit_data[$selection]}"
