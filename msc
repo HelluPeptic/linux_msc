@@ -91,43 +91,22 @@ get_github_commits() {
         return 1
     fi
     
-    # Use simple grep/sed parsing (jq has compatibility issues)
-    # Disable jq parsing for now due to compatibility issues
-    if false; then
-        echo "jq disabled"
-    else
-        # Simple fallback parsing using grep and sed
-        local temp_commits="/tmp/commits_$$"
-        echo "$commits_json" > "$temp_commits"
+    # Simple parsing - just show the first few commits that aren't the current one
+    echo "$commits_json" | grep -o '"sha": "[^"]*"' | head -5 | while read -r sha_line; do
+        local sha=$(echo "$sha_line" | sed 's/"sha": "\([^"]*\)"/\1/')
         
-        # Extract commits one by one
-        local commit_count=0
-        while [ $commit_count -lt 10 ]; do
-            local sha=$(grep -o '"sha": "[^"]*"' "$temp_commits" | head -n1 | sed 's/"sha": "\([^"]*\)"/\1/')
-            [ -z "$sha" ] && break
-            
-            # Skip if this is the same commit
-            if [ "$sha" = "$current_commit" ]; then
-                sed -i "/\"sha\": \"$sha\"/,/},/d" "$temp_commits"
-                commit_count=$((commit_count + 1))
-                continue
-            fi
-            
-            local date=$(grep -A20 "\"sha\": \"$sha\"" "$temp_commits" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
-            local message=$(grep -A10 "\"sha\": \"$sha\"" "$temp_commits" | grep '"message":' | head -n1 | sed 's/.*"message": "\([^"]*\)".*/\1/' | cut -c1-50)
-            
-            # Only show commits newer than current version
-            if compare_timestamps "$date" "$current_timestamp"; then
-                echo "$sha|$date|$message|$branch"
-            fi
-            
-            # Remove this commit from temp file to get next one
-            sed -i "/\"sha\": \"$sha\"/,/},/d" "$temp_commits"
-            commit_count=$((commit_count + 1))
-        done
+        # Skip if this is the same commit as current
+        if [ "$sha" = "$current_commit" ]; then
+            continue
+        fi
         
-        rm -f "$temp_commits"
-    fi
+        # Extract date and message for this commit
+        local commit_section=$(echo "$commits_json" | sed -n "/\"sha\": \"$sha\"/,/},/p")
+        local date=$(echo "$commit_section" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
+        local message=$(echo "$commit_section" | grep '"message":' | head -n1 | sed 's/.*"message": "\([^"]*\)".*/\1/' | head -c50)
+        
+        echo "$sha|$date|$message|$branch"
+    done
 }
 
 # Function to check for updates
@@ -301,7 +280,7 @@ install_update() {
 # Function to display the menu
 show_menu() {
     dialog --clear --title "Minecraft Server Control" --menu "Choose an option:" 17 55 3 \
-        1 "Manage Minecraft Servers testtsetestsetset" \
+        1 "Manage Minecraft Servers" \
         2 "Create a New Minecraft Server" \
         3 "Check for Updates" 2> /tmp/msc_menu_choice
 
