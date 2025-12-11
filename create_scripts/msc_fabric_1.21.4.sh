@@ -64,17 +64,78 @@ check_java_version() {
     fi
 }
 
+# Function to verify download integrity
+verify_download() {
+    local file="$1"
+    local min_size="$2"
+    
+    if [ ! -f "$file" ]; then
+        return 1
+    fi
+    
+    local file_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+    if [ "$file_size" -lt "$min_size" ]; then
+        return 1
+    fi
+    
+    return 0
+}
+
+# Function to download with retry mechanism
+download_with_retry() {
+    local url="$1"
+    local output="$2"
+    local min_size="${3:-1000000}"  # Default 1MB minimum
+    local max_attempts=3
+    local attempt=1
+    
+    while [ $attempt -le $max_attempts ]; do
+        echo "Download attempt $attempt of $max_attempts..."
+        
+        if curl -L --fail --show-error -o "$output" "$url"; then
+            if verify_download "$output" "$min_size"; then
+                echo "Download successful and verified."
+                return 0
+            else
+                echo "Download verification failed (file too small or corrupted)."
+                rm -f "$output"
+            fi
+        else
+            echo "Download failed."
+            rm -f "$output"
+        fi
+        
+        if [ $attempt -lt $max_attempts ]; then
+            echo "Waiting 3 seconds before retry..."
+            sleep 3
+        fi
+        
+        attempt=$((attempt + 1))
+    done
+    
+    echo "Error: Failed to download after $max_attempts attempts."
+    echo "Please check your internet connection and try again."
+    echo "If the problem persists, the download URL may be outdated."
+    return 1
+}
+
 # Function to download and set up the Fabric server
 download_fabric_server() {
+    # Check disk space (estimate 2GB needed for server)
+    local available_gb=$(df . | awk 'NR==2 {print int($4/1024/1024)}')
+    if [ "$available_gb" -lt 2 ]; then
+        echo "Error: Insufficient disk space. Need at least 2GB, available: ${available_gb}GB"
+        exit 1
+    fi
+    
     mkdir -p "$server_dir"
     cd "$server_dir" || exit 1
 
     echo "Downloading Fabric installer..."
-    curl -o "$FABRIC_INSTALLER_JAR" "$FABRIC_INSTALLER_URL"
-
-    # Check if download was successful
-    if [ ! -f "$FABRIC_INSTALLER_JAR" ]; then
-        echo "Download failed. Please check the Fabric installer URL."
+    
+    # Download with retry and verification (minimum 1MB for installer)
+    if ! download_with_retry "$FABRIC_INSTALLER_URL" "$FABRIC_INSTALLER_JAR" 1000000; then
+        echo "Failed to download Fabric installer. Exiting."
         exit 1
     fi
 

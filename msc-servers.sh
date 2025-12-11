@@ -23,6 +23,27 @@ get_system_resources() {
     echo "CPU: ${cpu_usage}% | ${memory_info} | ${disk_info}"
 }
 
+# Function to check available disk space in GB
+get_available_space_gb() {
+    local path="${1:-.}"
+    df "$path" | awk 'NR==2 {print int($4/1024/1024)}'
+}
+
+# Function to validate sufficient disk space
+check_disk_space() {
+    local required_gb="$1"
+    local operation="$2"
+    local path="${3:-.}"
+    
+    local available_gb=$(get_available_space_gb "$path")
+    
+    if [ "$available_gb" -lt "$required_gb" ]; then
+        dialog --title "Insufficient Disk Space" --msgbox "Error: Not enough disk space for $operation.\n\nRequired: ${required_gb}GB\nAvailable: ${available_gb}GB\n\nPlease free up space and try again." 12 60
+        return 1
+    fi
+    return 0
+}
+
 # Function to check server status
 is_server_running() {
     local server_name="$1"
@@ -140,6 +161,15 @@ view_latest_log() {
 create_backup() {
     local server_name="$1"
     local backup_dir="$server_name/backups"
+    
+    # Check disk space before creating backup (estimate 2x server size needed)
+    local server_size_gb=$(du -s "$server_name" 2>/dev/null | awk '{print int($1/1024/1024)+1}' || echo "2")
+    local required_space=$((server_size_gb * 2))
+    
+    if ! check_disk_space "$required_space" "backup creation" "$server_name"; then
+        return
+    fi
+    
     mkdir -p "$backup_dir"
 
     local backup_name=$(dialog --inputbox "Choose a name for the backup:" 10 50 3>&1 1>&2 2>&3)
