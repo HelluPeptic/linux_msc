@@ -86,7 +86,12 @@ get_github_commits() {
     # Get commits from GitHub API
     local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=5")
     
+    # Debug: Show API response status
+    echo "DEBUG: Checking branch $branch" >&2
+    echo "DEBUG: API response length: ${#commits_json}" >&2
+    
     if [ $? -ne 0 ] || [ -z "$commits_json" ] || echo "$commits_json" | grep -q '"message": "Not Found"'; then
+        echo "DEBUG: API call failed or branch not found" >&2
         return 1
     fi
     
@@ -132,17 +137,14 @@ check_for_updates() {
         current_version="dummy_hash_that_wont_match"
     fi
     
-    # Check main branch
-    if get_github_commits "main" "$current_version" >> "$temp_file"; then
-        updates_found=true
-    fi
+    # Debug: Check each branch and show what we get
+    echo "=== MAIN BRANCH ===" >> "$temp_file"
+    get_github_commits "main" "$current_version" >> "$temp_file"
+    echo "=== QOL-UPDATES BRANCH ===" >> "$temp_file"
+    get_github_commits "QoL-updates" "$current_version" | sed "s/|QoL-updates$/|QoL-updates [EXPERIMENTAL]/" >> "$temp_file"
     
-    # Check other branches (mark as experimental)
-    for branch in "QoL-updates" "dev" "experimental"; do
-        if get_github_commits "$branch" "$current_version" | sed "s/|$branch$/|$branch [EXPERIMENTAL]/" >> "$temp_file"; then
-            updates_found=true
-        fi
-    done
+    # Always show the debug file content
+    updates_found=true
     
     if [ ! -s "$temp_file" ]; then
         dialog --msgbox "You're up to date!\\n\\nNo newer updates available.\\n\\nCurrent version: ${current_version:0:8}" 10 50
@@ -271,7 +273,7 @@ install_update() {
 # Function to display the menu
 show_menu() {
     dialog --clear --title "Minecraft Server Control" --menu "Choose an option:" 17 55 3 \
-        1 "Manage Minecraft Servers" \
+        1 "Manage Minecraft Servers testtesttest" \
         2 "Create a New Minecraft Server" \
         3 "Check for Updates" 2> /tmp/msc_menu_choice
 
