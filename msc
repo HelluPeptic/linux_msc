@@ -32,7 +32,7 @@ get_github_commits() {
         return 1
     fi
     
-    # Use jq if available, otherwise use a more reliable parsing method
+    # Use jq if available, otherwise use simple grep/sed parsing
     if command -v jq >/dev/null 2>&1; then
         echo "$commits_json" | jq -r '.[] | "\(.sha)|\(.commit.author.date)|\(.commit.message)|'$branch'"' | while IFS='|' read -r sha date message branch_name; do
             if [ "$sha" != "$current_commit" ]; then
@@ -44,25 +44,28 @@ get_github_commits() {
             fi
         done
     else
-        # Fallback parsing without jq
-        echo "$commits_json" | awk '
-        BEGIN { RS="},"; FS=""; commit_found=0 }
-        {
-            if (match($0, /"sha": "([^"]+)"/, sha_match)) {
-                sha = sha_match[1]
-                if (sha == "'$current_commit'") exit
-                
-                if (match($0, /"date": "([^"]+)"/, date_match)) {
-                    date = date_match[1]
-                }
-                
-                if (match($0, /"message": "([^"]+)"/, msg_match)) {
-                    message = substr(msg_match[1], 1, 50)
-                    gsub(/\n/, " ", message)
-                    print sha "|" date "|" message "|'$branch'"
-                }
-            }
-        }'
+        # Simple fallback parsing using grep and sed
+        local temp_commits="/tmp/commits_$$"
+        echo "$commits_json" > "$temp_commits"
+        
+        # Extract commits one by one
+        local commit_count=0
+        while [ $commit_count -lt 5 ]; do
+            local sha=$(grep -o '"sha": "[^"]*"' "$temp_commits" | head -n1 | sed 's/"sha": "\([^"]*\)"/\1/')
+            [ -z "$sha" ] && break
+            [ "$sha" = "$current_commit" ] && break
+            
+            local date=$(grep -A20 "\"sha\": \"$sha\"" "$temp_commits" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
+            local message=$(grep -A10 "\"sha\": \"$sha\"" "$temp_commits" | grep '"message":' | head -n1 | sed 's/.*"message": "\([^"]*\)".*/\1/' | cut -c1-50)
+            
+            echo "$sha|$date|$message|$branch"
+            
+            # Remove this commit from temp file to get next one
+            sed -i "/\"sha\": \"$sha\"/,/},/d" "$temp_commits"
+            commit_count=$((commit_count + 1))
+        done
+        
+        rm -f "$temp_commits"
     fi
 }
 
