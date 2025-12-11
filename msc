@@ -106,7 +106,7 @@ check_for_updates() {
             
             # Get this commit's timestamp and message
             local commit_timestamp=$(echo "$commits_data" | grep -A20 "\"sha\": \"$commit_hash\"" | grep -m1 '"date":' | sed 's/.*"date": "\([^"]*\)".*/\1/')
-            local commit_message=$(echo "$commits_data" | grep -A10 "\"sha\": \"$commit_hash\"" | grep -m1 '"message":' | sed 's/.*"message": "\([^"]*\)".*/\1/' | head -c50)
+            local commit_message=$(echo "$commits_data" | sed -n "/\"sha\": \"$commit_hash\"/,/\"message\":/p" | grep '"message":' | sed 's/.*"message": "\([^"]*\)".*/\1/' | head -c50)
             
             # Only include if this commit is newer than current
             if [ -n "$commit_timestamp" ] && is_newer_timestamp "$commit_timestamp" "$current_timestamp"; then
