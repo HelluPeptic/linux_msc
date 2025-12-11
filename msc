@@ -90,14 +90,9 @@ get_github_commits() {
         return 1
     fi
     
-    # Simple parsing - just show commits that aren't the current one
+    # Debug: Show ALL commits for now (remove current_commit check temporarily)
     echo "$commits_json" | grep -o '"sha": "[^"]*"' | head -3 | while read -r sha_line; do
         local sha=$(echo "$sha_line" | sed 's/"sha": "\([^"]*\)"/\1/')
-        
-        # Skip if this is the same commit as current
-        if [ "$sha" = "$current_commit" ]; then
-            continue
-        fi
         
         # Extract date and message for this commit
         local date=$(echo "$commits_json" | grep -A10 "\"sha\": \"$sha\"" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
@@ -129,11 +124,12 @@ check_for_updates() {
     # Clear temp file
     > "$temp_file"
     
-    # If version is unknown, only check for the latest release on main branch
+    # Debug: Show current version
+    dialog --msgbox "Debug Info:\\n\\nCurrent version: $current_version\\n\\nThis will help debug the update detection." 12 60
+    
+    # If version is unknown, show all recent commits anyway for testing
     if [ "$current_version" = "unknown" ]; then
-        dialog --msgbox "This appears to be a development version or first install.\n\nFor development versions, please use git to update manually.\n\nIf this is a regular install, please reinstall from the latest release." 12 70
-        rm -f "$temp_file"
-        return
+        current_version="dummy_hash_that_wont_match"
     fi
     
     # Check main branch
