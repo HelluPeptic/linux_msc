@@ -189,7 +189,7 @@ install_update() {
 # Function to display the menu
 show_menu() {
     dialog --clear --title "Minecraft Server Control" --menu "Choose an option:" 17 55 3 \
-        1 "Manage Minecraft Servers testtesttest" \
+        1 "Manage Minecraft Servers" \
         2 "Create a New Minecraft Server" \
         3 "Check for Updates" 2> /tmp/msc_menu_choice
 
