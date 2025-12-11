@@ -138,10 +138,9 @@ show_update_menu() {
             branch_label="⚠️  $branch"
         fi
         
-        local display_text="$commit_message"
-        local display_info="$display_date - $branch_label"
+        local display_text="$commit_message ($display_date - $branch_label)"
         
-        menu_items+=("$counter" "$display_text" "$display_info")
+        menu_items+=("$counter" "$display_text")
         commit_data["$counter"]="$commit_hash|$commit_message|$branch"
         counter=$((counter + 1))
     done < "$updates_file"
