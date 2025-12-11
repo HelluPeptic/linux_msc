@@ -94,10 +94,10 @@ get_github_commits() {
     echo "$commits_json" | grep -o '"sha": "[^"]*"' | head -3 | while read -r sha_line; do
         local sha=$(echo "$sha_line" | sed 's/"sha": "\([^"]*\)"/\1/')
         
-        # Skip if this is the same commit as current
-        if [ "$sha" = "$current_commit" ]; then
-            continue
-        fi
+        # Temporarily show ALL commits for debugging
+        # if [ "$sha" = "$current_commit" ]; then
+        #     continue
+        # fi
         
         # Extract date and message for this commit
         local date=$(echo "$commits_json" | grep -A10 "\"sha\": \"$sha\"" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
