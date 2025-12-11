@@ -93,7 +93,7 @@ get_github_commits() {
     
     # Use jq if available, otherwise use simple grep/sed parsing
     if command -v jq >/dev/null 2>&1; then
-        echo "$commits_json" | jq -r '.[] | "\(.sha)|\(.commit.author.date)|\(.commit.message)|'$branch'"' | while IFS='|' read -r sha date message branch_name; do
+        echo "$commits_json" | jq -r --arg branch "$branch" '.[] | "\(.sha)|\(.commit.author.date)|\(.commit.message)|\($branch)"' | while IFS='|' read -r sha date message branch_name; do
             # Skip if this is the same commit
             if [ "$sha" = "$current_commit" ]; then
                 continue
