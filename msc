@@ -186,7 +186,7 @@ check_for_updates() {
     done
     
     if [ ! -s "$temp_file" ]; then
-        dialog --msgbox "You're up to date! \u2713\n\nNo newer updates available.\n\nCurrent version: ${current_version:0:8}" 10 50
+        dialog --msgbox "You're up to date!\\n\\nNo newer updates available.\\n\\nCurrent version: ${current_version:0:8}" 10 50
         rm -f "$temp_file"
         return
     fi
