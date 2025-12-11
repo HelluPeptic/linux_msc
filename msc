@@ -82,32 +82,32 @@ compare_timestamps() {
 get_github_commits() {
     local branch="$1"
     local current_commit="$2"
+    local current_timestamp="$3"
     
     # Get commits from GitHub API
     local commits_json=$(curl -s "https://api.github.com/repos/$GITHUB_REPO/commits?sha=$branch&per_page=5")
     
-    echo "DEBUG: Branch $branch - JSON length: ${#commits_json}"
-    echo "DEBUG: First 100 chars: ${commits_json:0:100}"
-    
     if [ $? -ne 0 ] || [ -z "$commits_json" ] || echo "$commits_json" | grep -q '"message": "Not Found"'; then
-        echo "DEBUG: API call failed for branch $branch"
         return 1
     fi
     
-    # Show commits that aren't the current commit
+    # Show only commits newer than current version
     echo "$commits_json" | grep -o '"sha": "[^"]*"' | head -3 | while read -r sha_line; do
         local sha=$(echo "$sha_line" | sed 's/"sha": "\([^"]*\)"/\1/')
         
-        # Temporarily show ALL commits for debugging
-        # if [ "$sha" = "$current_commit" ]; then
-        #     continue
-        # fi
+        # Skip if this is the same commit as current
+        if [ "$sha" = "$current_commit" ]; then
+            continue
+        fi
         
         # Extract date and message for this commit
         local date=$(echo "$commits_json" | grep -A10 "\"sha\": \"$sha\"" | grep '"date":' | head -n1 | sed 's/.*"date": "\([^"]*\)".*/\1/')
         local message=$(echo "$commits_json" | grep -A5 "\"sha\": \"$sha\"" | grep '"message":' | head -n1 | sed 's/.*"message": "\([^"]*\)".*/\1/' | head -c50)
         
-        echo "$sha|$date|$message|$branch"
+        # Only show commits newer than current version
+        if compare_timestamps "$date" "$current_timestamp"; then
+            echo "$sha|$date|$message|$branch"
+        fi
     done
 }
 
@@ -138,14 +138,20 @@ check_for_updates() {
         current_version="dummy_hash_that_wont_match"
     fi
     
-    # Debug: Check if function is working at all
-    echo "Testing main branch..." >> "$temp_file"
-    get_github_commits "main" "$current_version" >> "$temp_file" 2>&1
-    echo "Testing QoL-updates branch..." >> "$temp_file" 
-    get_github_commits "QoL-updates" "$current_version" >> "$temp_file" 2>&1
+    # Get current commit timestamp to compare against
+    local current_timestamp=$(get_current_commit_timestamp "$current_version")
     
-    # Always show temp file for debugging
-    updates_found=true
+    # Check main branch
+    if get_github_commits "main" "$current_version" "$current_timestamp" >> "$temp_file"; then
+        updates_found=true
+    fi
+    
+    # Check other branches (mark as experimental)  
+    for branch in "QoL-updates" "dev" "experimental"; do
+        if get_github_commits "$branch" "$current_version" "$current_timestamp" | sed "s/|$branch$/|$branch [EXPERIMENTAL]/" >> "$temp_file"; then
+            updates_found=true
+        fi
+    done
     
     if [ ! -s "$temp_file" ]; then
         dialog --msgbox "You're up to date!\\n\\nNo newer updates available.\\n\\nCurrent version: ${current_version:0:8}" 10 50
