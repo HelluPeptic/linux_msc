@@ -129,22 +129,22 @@ check_for_updates() {
     # Clear temp file
     > "$temp_file"
     
-    # Debug: Show current version
-    dialog --msgbox "Debug Info:\\n\\nCurrent version: $current_version\\n\\nThis will help debug the update detection." 12 60
-    
     # If version is unknown, show all recent commits anyway for testing
     if [ "$current_version" = "unknown" ]; then
         current_version="dummy_hash_that_wont_match"
     fi
     
-    # Debug: Check each branch and show what we get
-    echo "=== MAIN BRANCH ===" >> "$temp_file"
-    get_github_commits "main" "$current_version" >> "$temp_file"
-    echo "=== QOL-UPDATES BRANCH ===" >> "$temp_file"
-    get_github_commits "QoL-updates" "$current_version" | sed "s/|QoL-updates$/|QoL-updates [EXPERIMENTAL]/" >> "$temp_file"
+    # Check main branch
+    if get_github_commits "main" "$current_version" >> "$temp_file"; then
+        updates_found=true
+    fi
     
-    # Always show the debug file content
-    updates_found=true
+    # Check other branches (mark as experimental)
+    for branch in "QoL-updates" "dev" "experimental"; do
+        if get_github_commits "$branch" "$current_version" | sed "s/|$branch$/|$branch [EXPERIMENTAL]/" >> "$temp_file"; then
+            updates_found=true
+        fi
+    done
     
     if [ ! -s "$temp_file" ]; then
         dialog --msgbox "You're up to date!\\n\\nNo newer updates available.\\n\\nCurrent version: ${current_version:0:8}" 10 50
@@ -168,12 +168,23 @@ show_update_menu() {
         # Format the date nicely
         local display_date=$(date -d "$commit_date" "+%b %d, %Y" 2>/dev/null || echo "Recent")
         
-        # Create user-friendly display with experimental marking
+        # Create user-friendly display with experimental marking and commit hash
+        local short_hash="${commit_hash:0:8}"
         local display_text
-        if [[ "$branch" == *"EXPERIMENTAL"* ]]; then
-            display_text="[EXPERIMENTAL] $commit_message ($display_date - $branch)"
+        
+        # Mark as experimental if branch is NOT main
+        if [ "$branch" != "main" ]; then
+            if [ -z "$commit_message" ] || [ "$commit_message" = "" ]; then
+                display_text="[EXPERIMENTAL] Commit $short_hash ($display_date - $branch)"
+            else
+                display_text="[EXPERIMENTAL] $commit_message [$short_hash] ($display_date - $branch)"
+            fi
         else
-            display_text="$commit_message ($display_date - $branch)"
+            if [ -z "$commit_message" ] || [ "$commit_message" = "" ]; then
+                display_text="Commit $short_hash ($display_date - $branch)"
+            else
+                display_text="$commit_message [$short_hash] ($display_date - $branch)"
+            fi
         fi
         
         menu_items+=("$counter" "$display_text")
