@@ -207,13 +207,13 @@ show_update_menu() {
         # Format the date nicely
         local display_date=$(date -d "$commit_date" "+%b %d, %Y" 2>/dev/null || echo "Recent")
         
-        # Create user-friendly display
-        local branch_label="$branch"
+        # Create user-friendly display with experimental marking
+        local display_text
         if [[ "$branch" == *"EXPERIMENTAL"* ]]; then
-            branch_label="⚠️  $branch"
+            display_text="[EXPERIMENTAL] $commit_message ($display_date - $branch)"
+        else
+            display_text="$commit_message ($display_date - $branch)"
         fi
-        
-        local display_text="$commit_message ($display_date - $branch_label)"
         
         menu_items+=("$counter" "$display_text")
         commit_data["$counter"]="$commit_hash|$commit_message|$branch"
@@ -236,8 +236,12 @@ show_update_menu() {
             branch_warning="\n\n  WARNING: This is an experimental branch!\nIt may contain unstable features or bugs."
         fi
         
-        if dialog --yesno "Install update?\n\nCommit: ${selected_commit:0:8}\nMessage: $selected_message\nBranch: $selected_branch$branch_warning\n\nThis will update your msc installation." 15 70; then
-            install_update "$selected_commit" "$selected_branch"
+        # Clean branch name for display
+        local clean_branch=$(echo "$selected_branch" | sed 's/ \[EXPERIMENTAL\]//')
+        local branch_display="$clean_branch"
+        
+        if dialog --yesno "Install update?\n\nCommit: ${selected_commit:0:8}\nMessage: $selected_message\nBranch: $branch_display$branch_warning\n\nThis will update your msc installation." 15 70; then
+            install_update "$selected_commit" "$clean_branch"
         fi
     fi
 }
@@ -267,7 +271,12 @@ install_update() {
         echo "60" ; echo "Installing files..."
         
         # Find the extracted directory
-        local extracted_dir=$(find . -maxdepth 1 -type d -name "*$GITHUB_REPO*" | head -1)
+        local extracted_dir=$(find . -maxdepth 1 -type d -name "*linux_msc*" | head -1)
+        if [ -z "$extracted_dir" ]; then
+            # Fallback: look for any directory that's not . or ..
+            extracted_dir=$(ls -d */ 2>/dev/null | head -1 | sed 's|/$||')
+        fi
+        
         if [ -z "$extracted_dir" ]; then
             dialog --msgbox "Failed to extract update files." 10 50
             rm -rf "$temp_dir"
