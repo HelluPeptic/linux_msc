@@ -91,21 +91,10 @@ get_github_commits() {
         return 1
     fi
     
-    # Use jq if available, otherwise use simple grep/sed parsing
-    if command -v jq >/dev/null 2>&1; then
-        echo "$commits_json" | jq -r --arg branch "$branch" '.[] | "\(.sha)|\(.commit.author.date)|\(.commit.message)|\($branch)"' | while IFS='|' read -r sha date message branch_name; do
-            # Skip if this is the same commit
-            if [ "$sha" = "$current_commit" ]; then
-                continue
-            fi
-            
-            # Only show commits newer than current version
-            if compare_timestamps "$date" "$current_timestamp"; then
-                # Clean up the commit message (first line only, max 50 chars)
-                clean_message=$(echo "$message" | head -n1 | cut -c1-50)
-                echo "$sha|$date|$clean_message|$branch_name"
-            fi
-        done
+    # Use simple grep/sed parsing (jq has compatibility issues)
+    # Disable jq parsing for now due to compatibility issues
+    if false; then
+        echo "jq disabled"
     else
         # Simple fallback parsing using grep and sed
         local temp_commits="/tmp/commits_$$"
