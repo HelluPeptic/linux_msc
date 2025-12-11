@@ -14,6 +14,15 @@ any_server_running() {
     sudo screen -list | grep -qE '1 Socket in'
 }
 
+# Function to get system resource information
+get_system_resources() {
+    local cpu_usage=$(top -bn1 | grep "Cpu(s)" | awk '{print $2}' | sed 's/%us,//' 2>/dev/null || echo "N/A")
+    local memory_info=$(free -h | awk '/^Mem:/ {printf "RAM: %s/%s", $3, $2}' 2>/dev/null || echo "RAM: N/A")
+    local disk_info=$(df -h / | awk 'NR==2 {printf "Disk: %s/%s (%s used)", $3, $2, $5}' 2>/dev/null || echo "Disk: N/A")
+    
+    echo "CPU: ${cpu_usage}% | ${memory_info} | ${disk_info}"
+}
+
 # Function to check server status
 is_server_running() {
     local server_name="$1"
@@ -37,7 +46,7 @@ start_server() {
             echo 'Server closed.'
         "
         sleep 2
-        dialog --msgbox "🟢 Server $full_server_name started successfully." 10 50
+        dialog --msgbox "Server $full_server_name started successfully." 10 50
     else
         dialog --msgbox "start.sh not found in $full_server_name. Cannot start server." 10 50
     fi
@@ -310,16 +319,17 @@ while true; do
 
     sorted_server_dirs=("${running_servers[@]}" "${not_running_servers[@]}")
 
+    # Add system resource display
+    system_info=$(get_system_resources)
+    
     menu_items=()
     for server in "${sorted_server_dirs[@]}"; do
         status=$(is_server_running "$server")
-        emoji="🔴"
-        [ "$status" == "Running" ] && emoji="🟢"
-        menu_items+=("$server" "$emoji $status")
+        menu_items+=("$server" "[$status]")
     done
 
-    # Display the menu
-    selected_server=$(dialog --menu "Select a server:" 15 50 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
+    # Display the menu with system information
+    selected_server=$(dialog --menu "Select a server:\n\nSystem Status: $system_info" 20 80 10 "${menu_items[@]}" 3>&1 1>&2 2>&3)
 
     # Handle cancellation
     if [ -z "$selected_server" ]; then
@@ -331,32 +341,44 @@ while true; do
     status=$(is_server_running "$full_server_name")
 
     if [ "$status" == "Running" ]; then
-        action=$(dialog --menu "Manage $full_server_name (🟢 Running):" 15 50 10 \
+        action=$(dialog --menu "Manage $full_server_name (Running):" 15 60 10 \
             "1" "View Console" \
-            "2" "Restart Server" \
-            "3" "Kill Server" \
-            "4" "Exit Menu" 3>&1 1>&2 2>&3)
+            "2" "View Latest Log" \
+            "3" "Create Backup" \
+            "4" "View Backups" \
+            "5" "Restart Server" \
+            "6" "Kill Server" \
+            "7" "Exit Menu" 3>&1 1>&2 2>&3)
 
         case $action in
             1) view_console "$full_server_name" ;;
-            2) stop_server "$full_server_name" ;;  # Update status dynamically
-            3) kill_server "$full_server_name" ;;
+            2) view_latest_log "$full_server_name" ;;
+            3) create_backup "$full_server_name" ;;
+            4) view_backups "$full_server_name" ;;
+            5) restart_server "$full_server_name" ;;
+            6) kill_server "$full_server_name" ;;
         esac
     elif [ "$status" == "Shutting Down" ]; then
         # Refresh the menu while the server is shutting down
         dialog --msgbox "The server $full_server_name is currently shutting down. Please wait." 10 50
     else
-        action=$(dialog --menu "Manage $full_server_name (🔴 Stopped):" 15 50 10 \
+        action=$(dialog --menu "Manage $full_server_name (Stopped):" 15 60 10 \
             "1" "Start Server" \
             "2" "Edit server.properties" \
-            "3" "Delete Server" \
-            "4" "Exit Menu" 3>&1 1>&2 2>&3)
+            "3" "View Latest Log" \
+            "4" "Create Backup" \
+            "5" "View Backups" \
+            "6" "Delete Server" \
+            "7" "Exit Menu" 3>&1 1>&2 2>&3)
 
         case $action in
             1) start_server "$full_server_name" ;;
             2) edit_properties "$full_server_name" ;;
-            3) delete_server "$full_server_name" ;;
-            4) ;;
+            3) view_latest_log "$full_server_name" ;;
+            4) create_backup "$full_server_name" ;;
+            5) view_backups "$full_server_name" ;;
+            6) delete_server "$full_server_name" ;;
+            7) ;;
         esac
     fi
 
