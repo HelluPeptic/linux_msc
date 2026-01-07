@@ -61,15 +61,72 @@ check_java_version() {
     fi
 }
 
+# Function to verify download integrity
+verify_download() {
+    local file="$1"
+    local min_size="$2"
+    
+    if [ ! -f "$file" ]; then
+        return 1
+    fi
+    
+    local file_size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo "0")
+    if [ "$file_size" -lt "$min_size" ]; then
+        return 1
+    fi
+    
+    return 0
+}
+
+# Function to download with retry mechanism
+download_with_retry() {
+    local url="$1"
+    local output="$2"
+    local min_size="${3:-1000000}"  # Default 1MB minimum
+    local max_attempts=3
+    local attempt=1
+    
+    while [ $attempt -le $max_attempts ]; do
+        echo "Download attempt $attempt of $max_attempts..."
+        
+        if curl -L --fail --show-error -o "$output" "$url"; then
+            if verify_download "$output" "$min_size"; then
+                echo "Download successful and verified."
+                return 0
+            else
+                echo "Download verification failed (file too small or corrupted)."
+                rm -f "$output"
+            fi
+        else
+            echo "Download failed."
+            rm -f "$output"
+        fi
+        
+        if [ $attempt -lt $max_attempts ]; then
+            echo "Waiting 3 seconds before retry..."
+            sleep 3
+        fi
+        
+        attempt=$((attempt + 1))
+    done
+    
+    echo "Error: Failed to download after $max_attempts attempts."
+    echo "Please check your internet connection and try again."
+    echo "If the problem persists, the download URL may be outdated."
+    return 1
+}
+
 download_fabric_server() {
     mkdir -p "$server_dir"
     cd "$server_dir" || exit 1
     echo "Downloading Fabric installer..."
-    curl -o "$FABRIC_INSTALLER_JAR" "$FABRIC_INSTALLER_URL"
-    if [ ! -f "$FABRIC_INSTALLER_JAR" ]; then
-        echo "Download failed. Please check the Fabric installer URL."
+    
+    if ! download_with_retry "$FABRIC_INSTALLER_URL" "$FABRIC_INSTALLER_JAR" 500000; then
+        echo "Error: Failed to download Fabric installer."
+        echo "URL: $FABRIC_INSTALLER_URL"
         exit 1
     fi
+    
     echo "Running Fabric installer for Minecraft version $MINECRAFT_VERSION..."
     java -jar "$FABRIC_INSTALLER_JAR" server -mcversion $MINECRAFT_VERSION -downloadMinecraft
     if [ ! -f "$MINECRAFT_SERVER_JAR" ]; then
