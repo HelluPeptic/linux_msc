@@ -42,11 +42,12 @@ options=(
     3 "Fabric"
     4 "Forge"
     5 "Folia"
+    6 "NeoForge"
 )
 
 choice=$(dialog --clear \
                 --title "Choose a Minecraft Client" \
-                --menu "Select an option using the arrow keys, or press Enter:" 15 40 6 \
+                --menu "Select an option using the arrow keys, or press Enter:" 15 40 7 \
                 "${options[@]}" \
                 2>&1 >/dev/tty)
 
@@ -108,6 +109,15 @@ case $choice in
             2 "1.21.4"
         )
         ;;
+    6) 
+        server_type="neoforge"
+        versions=(
+            1 "1.21.11"
+            2 "1.21.4"
+            3 "1.21.1"
+            4 "1.20.4"
+        )
+        ;;
 esac
 
 # Add a dialog warning message for Folia immediately after client selection
@@ -152,6 +162,14 @@ case $server_type in
         case $version_choice in
             1) server_version="1.21.11" ;;
             2) server_version="1.21.4" ;;
+        esac
+        ;;
+    "neoforge")
+        case $version_choice in
+            1) server_version="1.21.11" ;;
+            2) server_version="1.21.4" ;;
+            3) server_version="1.21.1" ;;
+            4) server_version="1.20.4" ;;
         esac
         ;;
     *)
@@ -241,6 +259,14 @@ case $server_type in
         case $server_version in
             "1.21.11") bash "$create_scripts_dir/msc_folia_1.21.11.sh" "$server_dir" ;;
             "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
+        esac
+        ;;
+    "neoforge")
+        case $server_version in
+            "1.21.11") bash "$create_scripts_dir/msc_neoforge_1.21.11.sh" "$server_dir" "$server_ram" ;;
+            "1.21.4") bash "$create_scripts_dir/msc_neoforge_1.21.4.sh" "$server_dir" "$server_ram" ;;
+            "1.21.1") bash "$create_scripts_dir/msc_neoforge_1.21.1.sh" "$server_dir" "$server_ram" ;;
+            "1.20.4") bash "$create_scripts_dir/msc_neoforge_1.20.4.sh" "$server_dir" "$server_ram" ;;
         esac
 esac
 
