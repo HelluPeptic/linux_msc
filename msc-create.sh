@@ -137,13 +137,32 @@ if [ -z "$version_choice" ]; then
     exit 0
 fi
 
-case $version_choice in
-    1) server_version="1.21.11" ;;
-    2) server_version="1.21.5" ;;
-    3) server_version="1.21.4" ;;
-    4) server_version="1.21.1" ;;
-    5) server_version="1.20.4" ;;
-    6) server_version="1.20.1" ;;
+case $server_type in
+    "fabric")
+        case $version_choice in
+            1) server_version="1.21.11" ;;
+            2) server_version="1.21.5" ;;
+            3) server_version="1.21.4" ;;
+            4) server_version="1.21.1" ;;
+            5) server_version="1.20.4" ;;
+            6) server_version="1.20.1" ;;
+        esac
+        ;;
+    "folia")
+        case $version_choice in
+            1) server_version="1.21.11" ;;
+            2) server_version="1.21.4" ;;
+        esac
+        ;;
+    *)
+        case $version_choice in
+            1) server_version="1.21.11" ;;
+            2) server_version="1.21.4" ;;
+            3) server_version="1.21.1" ;;
+            4) server_version="1.20.4" ;;
+            5) server_version="1.20.1" ;;
+        esac
+        ;;
 esac
 
 # Prompt for RAM allocation
