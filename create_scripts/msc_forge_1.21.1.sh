@@ -2,8 +2,7 @@
 
 MINECRAFT_VERSION="1.21.1"
 FORGE_INSTALLER_URL="https://maven.minecraftforge.net/net/minecraftforge/forge/1.21.1-52.0.28/forge-1.21.1-52.0.28-installer.jar"
-FORGE_INSTALLER_JAR="forge-installer.jar"
-FORGE_UNIVERSAL_JAR="forge-1.21.1-52.0.28-shim.jar"
+FORGE_INSTALLER_JAR="forge-1.21.1-52.0.28-installer.jar"
 
 # Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
@@ -90,12 +89,13 @@ download_forge_server() {
     echo "-Xms1024M" > user_jvm_args.txt
     echo "-Xmx$ram_allocation" >> user_jvm_args.txt
 
-    # Create a start script
-    echo "#!/bin/bash
-java -Xms1G -Xmx2G -jar $FORGE_UNIVERSAL_JAR nogui" > start.sh
+    # Create the start script
+    echo "#!/usr/bin/env sh
+# Add custom program arguments (such as nogui) to the next line before the \"$@\" or pass them to this script directly
+java @user_jvm_args.txt @libraries/net/minecraftforge/forge/1.21.1-52.0.28/unix_args.txt \"$@\"" > start.sh
 
     chmod +x start.sh
-    echo "Forge server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$server_dir' and run: 'bash start.sh'."
+    echo "Forge server for Minecraft $MINECRAFT_VERSION is ready! To start the server, navigate to '$server_dir' and run: './start.sh'."
 }
 
 # Main script flow

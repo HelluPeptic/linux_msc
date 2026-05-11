@@ -3,7 +3,7 @@
 SERVER_DIR="vanilla_1.21.11"
 MINECRAFT_VERSION="1.21.11"
 MINECRAFT_SERVER_JAR="server.jar"
-MINECRAFT_DOWNLOAD_URL="https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar"
+MINECRAFT_DOWNLOAD_URL="https://piston-data.mojang.com/v1/objects/64bb6d763bed0a9f1d632ec347938594144943ed/server.jar"
 
 # Accept the custom server directory name and RAM allocation as parameters
 server_dir="$1"
