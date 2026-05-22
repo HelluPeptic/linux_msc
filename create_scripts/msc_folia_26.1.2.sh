@@ -6,6 +6,7 @@ FOLIA_VERSION="26.1.2"
 FOLIA_JAR="folia-26.1.2.jar"
 FOLIA_DOWNLOAD_URL="https://fill-data.papermc.io/v1/objects/607afd1c3320008e1ffd2eaee6780ace4419d5f8c527b75e79f259be79ebf57b/folia-26.1.2-8.jar"
 RAM_ALLOCATION="6G"
+# v2
 
 # Ensure a server directory name is provided
 if [ -z "$SERVER_DIR" ]; then
