@@ -71,54 +71,52 @@ install_java_22() {
     echo "Java 22 installation completed and environment variables set."
 }
 
-# Function to download and set up the Folia server
+# Function to download the Folia server jar
 download_server() {
     # Ensure SERVER_DIR is an absolute path
     SERVER_DIR="$(realpath "$SERVER_DIR")"
 
+    # Debugging: Print the absolute path of SERVER_DIR
     echo "Debug: Absolute path of SERVER_DIR is $SERVER_DIR"
 
+    # Ensure the SERVER_DIR exists
     mkdir -p "$SERVER_DIR"
+
+    # Navigate to SERVER_DIR
     cd "$SERVER_DIR" || { echo "Error: Failed to navigate to SERVER_DIR: $SERVER_DIR"; exit 1; }
 
+    # Debugging: Confirm the current working directory after navigating to SERVER_DIR
     echo "Debug: Current working directory after navigating to SERVER_DIR is $(pwd)"
 
     echo "Downloading Folia $FOLIA_VERSION..."
     curl -o "$FOLIA_JAR" "$FOLIA_DOWNLOAD_URL"
-
     if [ ! -f "$FOLIA_JAR" ]; then
-        echo "Download failed. Please check the Folia download URL."
+        echo "Download failed. Check the download URL and try again."
         exit 1
     fi
 
     echo "eula=true" > eula.txt
-
-    echo "#!/bin/bash
-java -Xms1G -Xmx$RAM_ALLOCATION -jar $FOLIA_JAR nogui" > start.sh
+    echo '#!/bin/bash' > start.sh
+    echo "java -Xms1G -Xmx$RAM_ALLOCATION -jar $FOLIA_JAR nogui" >> start.sh
     chmod +x start.sh
-
-    echo "Folia server for Minecraft $FOLIA_VERSION is ready! To start the server, navigate to '$SERVER_DIR' and run: 'bash start.sh'."
+    echo "Folia $FOLIA_VERSION server setup complete!"
 }
 
-# Main script execution
+# Main script flow
+# Attempt to switch to Java 22 first
+switch_to_java22
+
+# Now check if Java 22 is installed after switching
 if check_java_version; then
-    echo "Correct Java version is already installed."
+    echo "Java 22 is already installed."
     download_server
 else
-    echo "Java 22 is not installed. Installing Java 22..."
     install_java_22
     if check_java_version; then
         echo "Java 22 installed successfully."
         download_server
     else
-        echo "There was an issue installing Java 22. Attempting to switch to Java 22..."
-        switch_to_java22
-        switch_to_javac22
-        download_server
-    fi
-fi
-        switch_to_java22
-        switch_to_javac22
-        download_server
+        echo "There was a problem installing Java 22."
+        exit 1
     fi
 fi
