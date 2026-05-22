@@ -12,35 +12,35 @@ if [ -z "$SERVER_DIR" ]; then
     exit 1
 fi
 
-setup_java_22() {
-    if [ -f /opt/jdk-22/bin/java ]; then
-        sudo update-alternatives --set java /opt/jdk-22/bin/java 2>/dev/null || true
-        sudo update-alternatives --set javac /opt/jdk-22/bin/javac 2>/dev/null || true
+setup_java_25() {
+    if [ -f /opt/jdk-25/bin/java ]; then
+        sudo update-alternatives --set java /opt/jdk-25/bin/java 2>/dev/null || true
+        sudo update-alternatives --set javac /opt/jdk-25/bin/javac 2>/dev/null || true
     fi
-    export JAVA_HOME=/opt/jdk-22
+    export JAVA_HOME=/opt/jdk-25
     export PATH=$JAVA_HOME/bin:$PATH
 }
 
 check_java_version() {
-    if [ -f /opt/jdk-22/bin/java ]; then
+    if [ -f /opt/jdk-25/bin/java ]; then
         return 0
     fi
     return 1
 }
 
-install_java_22() {
-    echo "Installing Java 22 manually..."
+install_java_25() {
+    echo "Installing Java 25 manually..."
     cd ~
-    wget https://github.com/adoptium/temurin22-binaries/releases/download/jdk-22.0.2%2B9/OpenJDK22U-jdk_aarch64_linux_hotspot_22.0.2_9.tar.gz
-    tar -xvf OpenJDK22U-jdk_aarch64_linux_hotspot_22.0.2_9.tar.gz
-    sudo mv jdk-22.0.2+9 /opt/jdk-22
-    echo "export JAVA_HOME=/opt/jdk-22" | sudo tee /etc/profile.d/jdk22.sh
-    echo "export PATH=\$JAVA_HOME/bin:\$PATH" | sudo tee -a /etc/profile.d/jdk22.sh
-    source /etc/profile.d/jdk22.sh
-    sudo update-alternatives --install /usr/bin/java java /opt/jdk-22/bin/java 2
-    sudo update-alternatives --install /usr/bin/javac javac /opt/jdk-22/bin/javac 2
-    rm -f ~/OpenJDK22U-jdk_aarch64_linux_hotspot_22.0.2_9.tar.gz
-    echo "Java 22 installation completed."
+    wget https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.3%2B9/OpenJDK25U-jdk_aarch64_linux_hotspot_25.0.3_9.tar.gz
+    tar -xvf OpenJDK25U-jdk_aarch64_linux_hotspot_25.0.3_9.tar.gz
+    sudo mv jdk-25.0.3+9 /opt/jdk-25
+    echo "export JAVA_HOME=/opt/jdk-25" | sudo tee /etc/profile.d/jdk25.sh
+    echo "export PATH=\$JAVA_HOME/bin:\$PATH" | sudo tee -a /etc/profile.d/jdk25.sh
+    source /etc/profile.d/jdk25.sh
+    sudo update-alternatives --install /usr/bin/java java /opt/jdk-25/bin/java 3
+    sudo update-alternatives --install /usr/bin/javac javac /opt/jdk-25/bin/javac 3
+    rm -f ~/OpenJDK25U-jdk_aarch64_linux_hotspot_25.0.3_9.tar.gz
+    echo "Java 25 installation completed."
 }
 
 download_server() {
@@ -63,19 +63,19 @@ download_server() {
     echo "Folia $FOLIA_VERSION server setup complete!"
 }
 
-setup_java_22
+setup_java_25
 
 if check_java_version; then
-    echo "Java 22 found."
+    echo "Java 25 found."
     download_server
 else
-    install_java_22
-    setup_java_22
+    install_java_25
+    setup_java_25
     if check_java_version; then
-        echo "Java 22 installed successfully."
+        echo "Java 25 installed successfully."
         download_server
     else
-        echo "Failed to install Java 22."
+        echo "Failed to install Java 25."
         exit 1
     fi
 fi
