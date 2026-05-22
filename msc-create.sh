@@ -105,8 +105,9 @@ case $choice in
     5) 
         server_type="folia"
         versions=(
-            1 "1.21.11"
-            2 "1.21.4"
+            1 "26.1.2"
+            2 "1.21.11"
+            3 "1.21.4"
         )
         ;;
     6) 
@@ -160,8 +161,9 @@ case $server_type in
         ;;
     "folia")
         case $version_choice in
-            1) server_version="1.21.11" ;;
-            2) server_version="1.21.4" ;;
+            1) server_version="26.1.2" ;;
+            2) server_version="1.21.11" ;;
+            3) server_version="1.21.4" ;;
         esac
         ;;
     "neoforge")
@@ -257,6 +259,7 @@ case $server_type in
         ;;
     "folia")
         case $server_version in
+            "26.1.2") bash "$create_scripts_dir/msc_folia_26.1.2.sh" "$server_dir" "$server_ram" ;;
             "1.21.11") bash "$create_scripts_dir/msc_folia_1.21.11.sh" "$server_dir" ;;
             "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
         esac
