@@ -57,7 +57,7 @@ download_server() {
 
     echo "eula=true" > eula.txt
 
-    printf '#!/bin/bash\njava -Xms1G -Xmx%s -jar %s nogui\n' "$RAM_ALLOCATION" "$FOLIA_JAR" > start.sh
+    printf '#!/bin/bash\n/opt/jdk-25/bin/java -Xms1G -Xmx%s -jar %s nogui\n' "$RAM_ALLOCATION" "$FOLIA_JAR" > start.sh
     chmod +x start.sh
 
     echo "Folia $FOLIA_VERSION server setup complete!"
