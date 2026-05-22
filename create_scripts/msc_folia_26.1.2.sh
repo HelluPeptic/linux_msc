@@ -1,26 +1,22 @@
 #!/bin/bash
 
-# Get the server directory name and RAM allocation from arguments
+# Get the server directory name from the first argument
 SERVER_DIR="$1"
 FOLIA_VERSION="26.1.2"
 FOLIA_JAR="folia-26.1.2.jar"
 FOLIA_DOWNLOAD_URL="https://fill-data.papermc.io/v1/objects/607afd1c3320008e1ffd2eaee6780ace4419d5f8c527b75e79f259be79ebf57b/folia-26.1.2-8.jar"
+RAM_ALLOCATION="6G"
 
-# Accept the custom server directory name and RAM allocation as parameters
-server_dir="$1"
-ram_allocation="$2"
-
-# Check if the directory name was provided
-if [[ -z "$server_dir" || -z "$ram_allocation" ]]; then
-    echo "Error: Missing parameters."
-    echo "Usage: $0 <server_directory> <ram_allocation>"
+# Ensure a server directory name is provided
+if [ -z "$SERVER_DIR" ]; then
+    echo "Error: You must specify a server directory name as the first argument."
+    echo "Usage: $0 <server_directory_name>"
     exit 1
 fi
 
 # Function to check if Java 22 is installed
 check_java_version() {
-    switch_to_java22
-    java_version=$(java -version 2>&1 | grep -oP 'version "\K[^"]*')
+    java_version=$(java -version 2>&1 | awk -F["_] 'NR==1 {print $2}')
     if [[ $java_version == 22* ]]; then
         return 0  # Java 22 is installed
     else
@@ -36,6 +32,14 @@ switch_to_java22() {
     fi
     export JAVA_HOME=/opt/jdk-22
     export PATH=$JAVA_HOME/bin:$PATH
+}
+
+# Function to switch to javac 22 if available
+switch_to_javac22() {
+    echo "Switching to javac 22..."
+    if [ -f /opt/jdk-22/bin/javac ]; then
+        sudo update-alternatives --set javac /opt/jdk-22/bin/javac 2>/dev/null || true
+    fi
 }
 
 # Function to install Java 22 manually from Adoptium
@@ -68,10 +72,16 @@ install_java_22() {
 }
 
 # Function to download and set up the Folia server
-download_folia_server() {
-    SERVER_DIR="$(realpath "$server_dir")"
+download_server() {
+    # Ensure SERVER_DIR is an absolute path
+    SERVER_DIR="$(realpath "$SERVER_DIR")"
+
+    echo "Debug: Absolute path of SERVER_DIR is $SERVER_DIR"
+
     mkdir -p "$SERVER_DIR"
-    cd "$SERVER_DIR" || exit 1
+    cd "$SERVER_DIR" || { echo "Error: Failed to navigate to SERVER_DIR: $SERVER_DIR"; exit 1; }
+
+    echo "Debug: Current working directory after navigating to SERVER_DIR is $(pwd)"
 
     echo "Downloading Folia $FOLIA_VERSION..."
     curl -o "$FOLIA_JAR" "$FOLIA_DOWNLOAD_URL"
@@ -81,30 +91,29 @@ download_folia_server() {
         exit 1
     fi
 
-    # Accept the EULA
     echo "eula=true" > eula.txt
 
-    # Create the start script
     echo "#!/bin/bash
-java -Xms1024M -Xmx$ram_allocation -jar $FOLIA_JAR nogui" > start.sh
+java -Xms1G -Xmx$RAM_ALLOCATION -jar $FOLIA_JAR nogui" > start.sh
     chmod +x start.sh
 
     echo "Folia server for Minecraft $FOLIA_VERSION is ready! To start the server, navigate to '$SERVER_DIR' and run: 'bash start.sh'."
 }
 
-# Main script flow
+# Main script execution
 if check_java_version; then
     echo "Correct Java version is already installed."
-    download_folia_server
+    download_server
 else
     echo "Java 22 is not installed. Installing Java 22..."
     install_java_22
     if check_java_version; then
         echo "Java 22 installed successfully."
-        download_folia_server
+        download_server
     else
         echo "There was an issue installing Java 22. Attempting to switch to Java 22..."
         switch_to_java22
-        download_folia_server
+        switch_to_javac22
+        download_server
     fi
 fi

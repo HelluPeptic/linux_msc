@@ -259,7 +259,7 @@ case $server_type in
         ;;
     "folia")
         case $server_version in
-            "26.1.2") bash "$create_scripts_dir/msc_folia_26.1.2.sh" "$server_dir" "$server_ram" ;;
+            "26.1.2") bash "$create_scripts_dir/msc_folia_26.1.2.sh" "$server_dir" ;;
             "1.21.11") bash "$create_scripts_dir/msc_folia_1.21.11.sh" "$server_dir" ;;
             "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
         esac
