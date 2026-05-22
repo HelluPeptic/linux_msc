@@ -117,3 +117,8 @@ else
         download_server
     fi
 fi
+        switch_to_java22
+        switch_to_javac22
+        download_server
+    fi
+fi
