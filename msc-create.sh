@@ -84,12 +84,13 @@ case $choice in
     3) 
         server_type="fabric"
         versions=(
-            1 "1.21.11"
-            2 "1.21.5"
-            3 "1.21.4"
-            4 "1.21.1"
-            5 "1.20.4"
-            6 "1.20.1"
+            1 "26.1.2"
+            2 "1.21.11"
+            3 "1.21.5"
+            4 "1.21.4"
+            5 "1.21.1"
+            6 "1.20.4"
+            7 "1.20.1"
         )
         ;;
     4) 
@@ -151,12 +152,13 @@ fi
 case $server_type in
     "fabric")
         case $version_choice in
-            1) server_version="1.21.11" ;;
-            2) server_version="1.21.5" ;;
-            3) server_version="1.21.4" ;;
-            4) server_version="1.21.1" ;;
-            5) server_version="1.20.4" ;;
-            6) server_version="1.20.1" ;;
+            1) server_version="26.1.2" ;;
+            2) server_version="1.21.11" ;;
+            3) server_version="1.21.5" ;;
+            4) server_version="1.21.4" ;;
+            5) server_version="1.21.1" ;;
+            6) server_version="1.20.4" ;;
+            7) server_version="1.20.1" ;;
         esac
         ;;
     "folia")
@@ -240,6 +242,7 @@ case $server_type in
         ;;
     "fabric")
         case $server_version in
+            "26.1.2") bash "$create_scripts_dir/msc_fabric_26.1.2.sh" "$server_dir" "$server_ram" ;;
             "1.21.11") bash "$create_scripts_dir/msc_fabric_1.21.11.sh" "$server_dir" "$server_ram" ;;
             "1.21.5") bash "$create_scripts_dir/msc_fabric_1.21.5.sh" "$server_dir" "$server_ram" ;;
             "1.21.4") bash "$create_scripts_dir/msc_fabric_1.21.4.sh" "$server_dir" "$server_ram" ;;
