@@ -17,8 +17,8 @@ fi
 
 # Function to check if Java 22 is installed
 check_java_version() {
-    java_version=$(java -version 2>&1 | awk -F["_] 'NR==1 {print $2}')
-    if [[ $java_version == 22* ]]; then
+    java_version=$(java -version 2>&1 | grep -oP 'version "\K[0-9]+')
+    if [[ $java_version == "22" ]]; then
         return 0  # Java 22 is installed
     else
         return 1  # Java 22 is not installed
