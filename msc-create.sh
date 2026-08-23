@@ -61,63 +61,69 @@ fi
 
 # Update the version selection menu to show only supported versions for each server type
 case $choice in
-    1) 
+    1)
         server_type="vanilla"
         versions=(
-            1 "1.21.11"
-            2 "1.21.4"
-            3 "1.21.1"
-            4 "1.20.4"
-            5 "1.20.1"
-        )
-        ;;
-    2) 
-        server_type="paper"
-        versions=(
-            1 "1.21.11"
-            2 "1.21.4"
-            3 "1.21.1"
-            4 "1.20.4"
-            5 "1.20.1"
-        )
-        ;;
-    3) 
-        server_type="fabric"
-        versions=(
-            1 "26.1.2"
-            2 "1.21.11"
-            3 "1.21.5"
-            4 "1.21.4"
-            5 "1.21.1"
-            6 "1.20.4"
-            7 "1.20.1"
-        )
-        ;;
-    4) 
-        server_type="forge"
-        versions=(
-            1 "1.21.11"
-            2 "1.21.4"
-            3 "1.21.1"
-            4 "1.20.4"
-            5 "1.20.1"
-        )
-        ;;
-    5) 
-        server_type="folia"
-        versions=(
-            1 "26.1.2"
+            1 "26.2"
             2 "1.21.11"
             3 "1.21.4"
+            4 "1.21.1"
+            5 "1.20.4"
+            6 "1.20.1"
         )
         ;;
-    6) 
+    2)
+        server_type="paper"
+        versions=(
+            1 "26.2"
+            2 "1.21.11"
+            3 "1.21.4"
+            4 "1.21.1"
+            5 "1.20.4"
+            6 "1.20.1"
+        )
+        ;;
+    3)
+        server_type="fabric"
+        versions=(
+            1 "26.2"
+            2 "26.1.2"
+            3 "1.21.11"
+            4 "1.21.5"
+            5 "1.21.4"
+            6 "1.21.1"
+            7 "1.20.4"
+            8 "1.20.1"
+        )
+        ;;
+    4)
+        server_type="forge"
+        versions=(
+            1 "26.2"
+            2 "1.21.11"
+            3 "1.21.4"
+            4 "1.21.1"
+            5 "1.20.4"
+            6 "1.20.1"
+        )
+        ;;
+    5)
+        server_type="folia"
+        versions=(
+            1 "26.2"
+            2 "26.1.2"
+            3 "1.21.11"
+            4 "1.21.4"
+        )
+        ;;
+    6)
         server_type="neoforge"
         versions=(
-            1 "1.21.11"
-            2 "1.21.4"
-            3 "1.21.1"
-            4 "1.20.4"
+            1 "26.2"
+            2 "1.21.11"
+            3 "1.21.4"
+            4 "1.21.1"
+            5 "1.20.4"
         )
         ;;
 esac
@@ -152,37 +158,41 @@ fi
 case $server_type in
     "fabric")
         case $version_choice in
-            1) server_version="26.1.2" ;;
-            2) server_version="1.21.11" ;;
-            3) server_version="1.21.5" ;;
-            4) server_version="1.21.4" ;;
-            5) server_version="1.21.1" ;;
-            6) server_version="1.20.4" ;;
-            7) server_version="1.20.1" ;;
+            1) server_version="26.2" ;;
+            2) server_version="26.1.2" ;;
+            3) server_version="1.21.11" ;;
+            4) server_version="1.21.5" ;;
+            5) server_version="1.21.4" ;;
+            6) server_version="1.21.1" ;;
+            7) server_version="1.20.4" ;;
+            8) server_version="1.20.1" ;;
         esac
         ;;
     "folia")
         case $version_choice in
-            1) server_version="26.1.2" ;;
-            2) server_version="1.21.11" ;;
-            3) server_version="1.21.4" ;;
+            1) server_version="26.2" ;;
+            2) server_version="26.1.2" ;;
+            3) server_version="1.21.11" ;;
+            4) server_version="1.21.4" ;;
         esac
         ;;
     "neoforge")
         case $version_choice in
-            1) server_version="1.21.11" ;;
-            2) server_version="1.21.4" ;;
-            3) server_version="1.21.1" ;;
-            4) server_version="1.20.4" ;;
+            1) server_version="26.2" ;;
+            2) server_version="1.21.11" ;;
+            3) server_version="1.21.4" ;;
+            4) server_version="1.21.1" ;;
+            5) server_version="1.20.4" ;;
         esac
         ;;
     *)
         case $version_choice in
-            1) server_version="1.21.11" ;;
-            2) server_version="1.21.4" ;;
-            3) server_version="1.21.1" ;;
-            4) server_version="1.20.4" ;;
-            5) server_version="1.20.1" ;;
+            1) server_version="26.2" ;;
+            2) server_version="1.21.11" ;;
+            3) server_version="1.21.4" ;;
+            4) server_version="1.21.1" ;;
+            5) server_version="1.20.4" ;;
+            6) server_version="1.20.1" ;;
         esac
         ;;
 esac
@@ -224,6 +234,7 @@ clear
 case $server_type in
     "vanilla")
         case $server_version in
+            "26.2") bash "$create_scripts_dir/msc_vanilla_26.2.sh" "$server_dir" "$server_ram" ;;
             "1.21.11") bash "$create_scripts_dir/msc_vanilla_1.21.11.sh" "$server_dir" "$server_ram" ;;
             "1.21.4") bash "$create_scripts_dir/msc_vanilla_1.21.4.sh" "$server_dir" "$server_ram" ;;
             "1.21.1") bash "$create_scripts_dir/msc_vanilla_1.21.1.sh" "$server_dir" "$server_ram" ;;
@@ -233,6 +244,7 @@ case $server_type in
         ;;
     "paper")
         case $server_version in
+            "26.2") bash "$create_scripts_dir/msc_paper_26.2.sh" "$server_dir" "$server_ram" ;;
             "1.21.11") bash "$create_scripts_dir/msc_paper_1.21.11.sh" "$server_dir" "$server_ram" ;;
             "1.21.4") bash "$create_scripts_dir/msc_paper_1.21.4.sh" "$server_dir" "$server_ram" ;;
             "1.21.1") bash "$create_scripts_dir/msc_paper_1.21.1.sh" "$server_dir" "$server_ram" ;;
@@ -242,6 +254,7 @@ case $server_type in
         ;;
     "fabric")
         case $server_version in
+            "26.2") bash "$create_scripts_dir/msc_fabric_26.2.sh" "$server_dir" "$server_ram" ;;
             "26.1.2") bash "$create_scripts_dir/msc_fabric_26.1.2.sh" "$server_dir" "$server_ram" ;;
             "1.21.11") bash "$create_scripts_dir/msc_fabric_1.21.11.sh" "$server_dir" "$server_ram" ;;
             "1.21.5") bash "$create_scripts_dir/msc_fabric_1.21.5.sh" "$server_dir" "$server_ram" ;;
@@ -253,6 +266,7 @@ case $server_type in
         ;;
     "forge")
         case $server_version in
+            "26.2") bash "$create_scripts_dir/msc_forge_26.2.sh" "$server_dir" "$server_ram" ;;
             "1.21.11") bash "$create_scripts_dir/msc_forge_1.21.11.sh" "$server_dir" "$server_ram" ;;
             "1.21.4") bash "$create_scripts_dir/msc_forge_1.21.4.sh" "$server_dir" "$server_ram" ;;
             "1.21.1") bash "$create_scripts_dir/msc_forge_1.21.1.sh" "$server_dir" "$server_ram" ;;
@@ -262,6 +276,7 @@ case $server_type in
         ;;
     "folia")
         case $server_version in
+            "26.2") bash "$create_scripts_dir/msc_folia_26.2.sh" "$server_dir" ;;
             "26.1.2") bash "$create_scripts_dir/msc_folia_26.1.2.sh" "$server_dir" ;;
             "1.21.11") bash "$create_scripts_dir/msc_folia_1.21.11.sh" "$server_dir" ;;
             "1.21.4") bash "$create_scripts_dir/msc_folia_1.21.4.sh" "$server_dir" ;;
@@ -269,6 +284,7 @@ case $server_type in
         ;;
     "neoforge")
         case $server_version in
+            "26.2") bash "$create_scripts_dir/msc_neoforge_26.2.sh" "$server_dir" "$server_ram" ;;
             "1.21.11") bash "$create_scripts_dir/msc_neoforge_1.21.11.sh" "$server_dir" "$server_ram" ;;
             "1.21.4") bash "$create_scripts_dir/msc_neoforge_1.21.4.sh" "$server_dir" "$server_ram" ;;
             "1.21.1") bash "$create_scripts_dir/msc_neoforge_1.21.1.sh" "$server_dir" "$server_ram" ;;
