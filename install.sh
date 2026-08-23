@@ -11,8 +11,9 @@ fi
 
 echo "Installing scripts and directories to $INSTALL_DIR..."
 
-# Install/Update Dialog
-sudo apt install dialog
+# Install/Update Dialog and jq (jq is required by the dynamic
+# version-resolution logic in create_scripts/msc_common.sh)
+sudo apt install dialog jq
 
 # Get the directory where this script is located
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
