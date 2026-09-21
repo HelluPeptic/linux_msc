@@ -1,6 +1,9 @@
 #!/bin/bash
-# Creates a NeoForge server for any Minecraft version NeoForge has
-# published, resolved live from NeoForge's maven metadata at run time.
+# Creates (or re-installs, in place) a NeoForge server for any
+# Minecraft version. By default it uses the highest published
+# NeoForge build for that version; pass a 4th argument to pin an
+# exact build instead (also how msc-servers.sh performs an in-place
+# loader update).
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/msc_common.sh"
@@ -8,9 +11,10 @@ source "$script_dir/msc_common.sh"
 mc_version="$1"
 server_dir="$2"
 ram_allocation="$3"
+neoforge_version_override="$4"
 
 if [[ -z "$mc_version" || -z "$server_dir" || -z "$ram_allocation" ]]; then
-    echo "Usage: $0 <minecraft_version> <server_directory> <ram_allocation>"
+    echo "Usage: $0 <minecraft_version> <server_directory> <ram_allocation> [neoforge_version]"
     exit 1
 fi
 
@@ -21,21 +25,33 @@ echo "Resolving Java requirement for Minecraft $mc_version..."
 resolve_vanilla_manifest "$mc_version"
 ensure_java "$JAVA_MAJOR"
 
-# NeoForge drops the leading "1." that older Minecraft versions had
-# (1.21.4 -> 21.4.x). The calendar-based scheme (26.2, ...) has no
-# leading "1." to drop, so it's used as-is.
-neo_prefix="${mc_version#1.}"
-neo_prefix_re=$(printf '%s' "$neo_prefix" | sed 's/\./\\./g')
-
-echo "Looking up the NeoForge version for Minecraft $mc_version..."
 metadata=$(curl -fsSL "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml")
-neoforge_version=$(echo "$metadata" | grep -oP "(?<=<version>)${neo_prefix_re}(\.[0-9]+)+(?=</version>)" | sort -V | tail -n 1)
 
-if [ -z "$neoforge_version" ]; then
-    echo "Error: NeoForge has no build published for Minecraft $mc_version yet."
-    exit 1
+if [ -n "$neoforge_version_override" ]; then
+    echo "Checking that NeoForge $neoforge_version_override exists..."
+    match=$(echo "$metadata" | grep -F "<version>${neoforge_version_override}</version>")
+    if [ -z "$match" ]; then
+        echo "Error: NeoForge $neoforge_version_override was not found."
+        exit 1
+    fi
+    neoforge_version="$neoforge_version_override"
+    echo "Using NeoForge $neoforge_version (pinned)."
+else
+    # NeoForge drops the leading "1." that older Minecraft versions had
+    # (1.21.4 -> 21.4.x). The calendar-based scheme (26.2, ...) has no
+    # leading "1." to drop, so it's used as-is.
+    neo_prefix="${mc_version#1.}"
+    neo_prefix_re=$(printf '%s' "$neo_prefix" | sed 's/\./\\./g')
+
+    echo "Looking up the NeoForge version for Minecraft $mc_version..."
+    neoforge_version=$(echo "$metadata" | grep -oP "(?<=<version>)${neo_prefix_re}(\.[0-9]+)+(?=</version>)" | sort -V | tail -n 1)
+
+    if [ -z "$neoforge_version" ]; then
+        echo "Error: NeoForge has no build published for Minecraft $mc_version yet."
+        exit 1
+    fi
+    echo "Using NeoForge $neoforge_version."
 fi
-echo "Using NeoForge $neoforge_version."
 
 installer_name="neoforge-${neoforge_version}-installer.jar"
 installer_url="https://maven.neoforged.net/releases/net/neoforged/neoforge/${neoforge_version}/${installer_name}"
@@ -59,5 +75,7 @@ echo "-Xmx$ram_allocation" >> user_jvm_args.txt
 
 printf '#!/usr/bin/env sh\n# Add custom program arguments (such as nogui) to the next line before the "$@" or pass them to this script directly\n%s @user_jvm_args.txt @libraries/net/neoforged/neoforge/%s/unix_args.txt "$@"\n' "$JAVA_BIN" "$neoforge_version" > start.sh
 chmod +x start.sh
+
+write_meta "." "server_type=neoforge" "mc_version=$mc_version" "loader_version=$neoforge_version" "ram=$ram_allocation"
 
 echo "NeoForge server for Minecraft $mc_version ($neoforge_version) is ready! Navigate to '$server_dir' and run './start.sh' to start."

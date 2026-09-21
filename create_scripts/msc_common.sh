@@ -95,3 +95,12 @@ ensure_java() {
     fi
     echo "Java $major installed to /opt/jdk-${major}."
 }
+
+# Record what a server is, so msc-servers.sh can offer version-specific
+# actions (like updating just the mod loader) without having to parse it
+# back out of the directory name.
+write_meta() {
+    local dir="$1"
+    shift
+    printf '%s\n' "$@" > "$dir/.msc_meta"
+}

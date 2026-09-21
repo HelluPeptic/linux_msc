@@ -53,4 +53,6 @@ echo "eula=true" > eula.txt
 printf '#!/bin/bash\n%s -Xms1024M -Xmx%s -jar %s nogui\n' "$JAVA_BIN" "$ram_allocation" "$jar_name" > start.sh
 chmod +x start.sh
 
+write_meta "." "server_type=folia" "mc_version=$mc_version" "loader_version=$build_id" "ram=$ram_allocation"
+
 echo "Folia server for Minecraft $mc_version (build $build_id) is ready! Navigate to '$server_dir' and run './start.sh' to start."

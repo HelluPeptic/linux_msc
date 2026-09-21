@@ -102,6 +102,18 @@ if [[ -z "$server_version" ]]; then
     exit 0
 fi
 
+# Fabric/Forge/NeoForge each have a mod loader version that's separate
+# from the Minecraft version. Offer to pin an exact one (e.g. because a
+# mod requires a newer loader build than whatever is "latest" today);
+# leaving it blank keeps the previous latest/recommended behavior.
+loader_version=""
+if [[ "$server_type" == "fabric" || "$server_type" == "forge" || "$server_type" == "neoforge" ]]; then
+    loader_version=$(dialog --inputbox \
+        "Optional: pin a specific $server_type loader/build version (e.g. because a mod requires a newer one than the default).\n\nLeave blank to use the latest/recommended version." \
+        11 65 2>&1 >/dev/tty)
+    clear
+fi
+
 # Prompt for RAM allocation
 server_ram=$(get_ram_allocation)
 
@@ -137,7 +149,7 @@ clear
 
 # Every server type is backed by one generic script that resolves the
 # exact build/installer for the requested version at run time.
-bash "$create_scripts_dir/msc_${server_type}.sh" "$server_version" "$server_dir" "$server_ram"
+bash "$create_scripts_dir/msc_${server_type}.sh" "$server_version" "$server_dir" "$server_ram" "$loader_version"
 
 if [[ $? -ne 0 ]]; then
     echo "Error: Failed to create the $server_type server for Minecraft $server_version."

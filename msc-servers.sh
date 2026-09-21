@@ -44,6 +44,70 @@ check_disk_space() {
     return 0
 }
 
+# Read one field out of a server's .msc_meta file (written by the
+# create_scripts/msc_<type>.sh scripts). Empty if the server predates
+# that metadata or the field isn't set.
+get_meta() {
+    local server_dir="$1"
+    local key="$2"
+    local meta_file="$server_dir/.msc_meta"
+    [ -f "$meta_file" ] || return
+    sed -n "s/^${key}=//p" "$meta_file" | head -n 1
+}
+
+# Figure out a server's current -Xmx so an update doesn't need to ask
+# again. Forge/NeoForge keep it in user_jvm_args.txt; everything else
+# has it inline in start.sh.
+get_current_ram() {
+    local server_dir="$1"
+    local ram=""
+    if [ -f "$server_dir/user_jvm_args.txt" ]; then
+        ram=$(grep -oP '(?<=-Xmx)\S+' "$server_dir/user_jvm_args.txt" | head -n 1)
+    fi
+    if [ -z "$ram" ] && [ -f "$server_dir/start.sh" ]; then
+        ram=$(grep -oP '(?<=-Xmx)\S+' "$server_dir/start.sh" | head -n 1)
+    fi
+    echo "$ram"
+}
+
+# Re-install just the mod loader for an existing Fabric/Forge/NeoForge
+# server in place, at a version the player picks - the world, plugins
+# and configs already on disk are untouched since the create scripts
+# only ever (re)write their own installer/loader/start.sh files.
+update_loader_version() {
+    local server_dir="$1"
+    local server_type=$(get_meta "$server_dir" "server_type")
+    local mc_version=$(get_meta "$server_dir" "mc_version")
+
+    if [[ "$server_type" != "fabric" && "$server_type" != "forge" && "$server_type" != "neoforge" ]]; then
+        dialog --msgbox "Loader version changes are only available for Fabric, Forge and NeoForge servers created with this version of msc (they need the .msc_meta file this server doesn't have)." 12 65
+        return
+    fi
+
+    local current_loader=$(get_meta "$server_dir" "loader_version")
+    local ram=$(get_current_ram "$server_dir")
+    if [ -z "$ram" ]; then
+        ram="2048M"
+    fi
+
+    local new_version
+    new_version=$(dialog --inputbox "Minecraft version: $mc_version\nCurrent $server_type version: ${current_loader:-unknown}\n\nEnter the exact $server_type version to install:" 12 65 3>&1 1>&2 2>&3)
+
+    if [ -z "$new_version" ]; then
+        return
+    fi
+
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local log_file="$server_dir/.msc_loader_update.log"
+
+    dialog --infobox "Installing $server_type $new_version for $server_dir...\n\nThis can take a minute." 10 60
+    if bash "$script_dir/create_scripts/msc_${server_type}.sh" "$mc_version" "$server_dir" "$ram" "$new_version" > "$log_file" 2>&1; then
+        dialog --msgbox "Updated $server_dir to $server_type $new_version." 10 60
+    else
+        dialog --msgbox "Failed to install $server_type $new_version.\n\nSee $log_file for details." 12 70
+    fi
+}
+
 # Function to check server status
 is_server_running() {
     local server_name="$1"
@@ -392,14 +456,15 @@ while true; do
         # Refresh the menu while the server is shutting down
         dialog --msgbox "The server $full_server_name is currently shutting down. Please wait." 10 50
     else
-        action=$(dialog --menu "Manage $full_server_name (Stopped):" 15 60 10 \
+        action=$(dialog --menu "Manage $full_server_name (Stopped):" 16 60 10 \
             "1" "Start Server" \
             "2" "Edit server.properties" \
             "3" "View Latest Log" \
             "4" "Create Backup" \
             "5" "View Backups" \
-            "6" "Delete Server" \
-            "7" "Exit Menu" 3>&1 1>&2 2>&3)
+            "6" "Update Loader Version" \
+            "7" "Delete Server" \
+            "8" "Exit Menu" 3>&1 1>&2 2>&3)
 
         case $action in
             1) start_server "$full_server_name" ;;
@@ -407,8 +472,9 @@ while true; do
             3) view_latest_log "$full_server_name" ;;
             4) create_backup "$full_server_name" ;;
             5) view_backups "$full_server_name" ;;
-            6) delete_server "$full_server_name" ;;
-            7) ;;
+            6) update_loader_version "$full_server_name" ;;
+            7) delete_server "$full_server_name" ;;
+            8) ;;
         esac
     fi
 

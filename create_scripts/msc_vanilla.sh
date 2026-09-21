@@ -37,4 +37,6 @@ echo "eula=true" > eula.txt
 printf '#!/bin/bash\n%s -Xms1024M -Xmx%s -jar server.jar nogui\n' "$JAVA_BIN" "$ram_allocation" > start.sh
 chmod +x start.sh
 
+write_meta "." "server_type=vanilla" "mc_version=$mc_version" "ram=$ram_allocation"
+
 echo "Vanilla server for Minecraft $mc_version is ready! Navigate to '$server_dir' and run './start.sh' to start."
